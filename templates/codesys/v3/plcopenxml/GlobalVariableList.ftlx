@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://www.plcopen.org/xml/tc6_0200">
+  <fileHeader companyName="" productName="CODESYS" productVersion="CODESYS V3.5 SP8 Patch 4" creationDateTime="2018-11-02T14:58:12.9094005" />
+  <contentHeader name="" modificationDateTime="2018-11-02T14:57:47.2639805">
+    <coordinateInfo>
+      <fbd>
+        <scaling x="1" y="1" />
+      </fbd>
+      <ld>
+        <scaling x="1" y="1" />
+      </ld>
+      <sfc>
+        <scaling x="1" y="1" />
+      </sfc>
+    </coordinateInfo>
+    <addData>
+      <data name="http://www.3s-software.com/plcopenxml/projectinformation" handleUnknown="implementation">
+        <ProjectInformation>
+          <property name="Author" type="string" />
+          <property name="Description" type="string" />
+          <property name="Project" type="string" />
+          <property name="Title" type="string" />
+          <property name="Version string" type="string" />
+        </ProjectInformation>
+      </data>
+    </addData>
+  </contentHeader>
+  <types>
+    <dataTypes />
+    <pous />
+  </types>
+  <instances>
+    <configurations />
+  </instances>
+  <addData>
+    <data name="http://www.3s-software.com/plcopenxml/globalvars" handleUnknown="implementation">
+      <globalVars name="${name}" constant="<#if constant!false>true<#else>false</#if>">
+        <#if vars?has_content>
+        <#list vars as var>
+        <variable name="${var.name}">
+          <type>
+            <${var.type} />
+          </type>
+          <#if var.value??>
+          <initialValue>
+            <simpleValue value="${var.value}" />
+          </initialValue>
+          </#if>
+        </variable>
+        </#list>
+        </#if>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>2333dc55-5b16-42d0-a11d-8392263511bc</ObjectId>
+          </data>
+        </addData>
+      </globalVars>
+    </data>
+    <data name="http://www.3s-software.com/plcopenxml/projectstructure" handleUnknown="discard">
+      <ProjectStructure>
+        <Folder Name="Libraries">
+          <Folder Name="log-lib">
+            <Object Name="${name}" ObjectId="2333dc55-5b16-42d0-a11d-8392263511bc" />
+          </Folder>
+        </Folder>
+      </ProjectStructure>
+    </data>
+  </addData>
+</project>

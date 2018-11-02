@@ -1,4 +1,33 @@
-
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://www.plcopen.org/xml/tc6_0200">
+  <fileHeader companyName="" productName="CODESYS" productVersion="CODESYS V3.5 SP8 Patch 4" creationDateTime="2018-11-02T14:41:21.0584922" />
+  <contentHeader name="" modificationDateTime="2018-10-12T17:17:50.0372032">
+    <coordinateInfo>
+      <fbd>
+        <scaling x="1" y="1" />
+      </fbd>
+      <ld>
+        <scaling x="1" y="1" />
+      </ld>
+      <sfc>
+        <scaling x="1" y="1" />
+      </sfc>
+    </coordinateInfo>
+    <addData>
+      <data name="http://www.3s-software.com/plcopenxml/projectinformation" handleUnknown="implementation">
+        <ProjectInformation>
+          <property name="Author" type="string" />
+          <property name="Description" type="string" />
+          <property name="Project" type="string" />
+          <property name="Title" type="string" />
+          <property name="Version string" type="string" />
+        </ProjectInformation>
+      </data>
+    </addData>
+  </contentHeader>
+  <types>
+    <dataTypes />
+    <pous>
       <pou name="${pou.name}" pouType="function">
         <interface>
           <returnType>
@@ -11,6 +40,11 @@
               <type>
                 <${inputVar.type} />
               </type>
+              <#if inputVar.value??>
+              <initialValue>
+                <simpleValue value="${inputVar.value}" />
+              </initialValue>
+              </#if>
             </variable>
             </#list>
           </inputVars>
@@ -22,6 +56,11 @@
               <type>
                 <${inOutVar.type} />
               </type>
+              <#if inOutVar.value??>
+              <initialValue>
+                <simpleValue value="${inOutVar.value}" />
+              </initialValue>
+              </#if>
             </variable>
             </#list>
           </inOutVars>
@@ -33,6 +72,11 @@
               <type>
                 <${var.type} />
               </type>
+              <#if var.value??>
+              <initialValue>
+                <simpleValue value="${var.value}" />
+              </initialValue>
+              </#if>
             </variable>
             </#list>
           </localVars>
@@ -56,21 +100,21 @@ ${instruction}
 VAR_INPUT
 <#if interface.inputVars?has_content>
 <#list interface.inputVars as inputVar>
-    ${inputVar.name}: ${inputVar.type};
+    ${inputVar.name}: ${inputVar.type}<#if inputVar.value??> := ${inputVar.value}</#if>;
 </#list>
 </#if>
 END_VAR
 <#if interface.inOutVars?has_content>
 VAR_IN_OUT
 <#list interface.inOutVars as inOutVar>
-    ${inOutVar.name}: ${inOutVar.type};
+    ${inOutVar.name}: ${inOutVar.type}<#if inOutVar.value??> := ${inOutVar.value}</#if>;
 </#list>
 END_VAR
 </#if>
 VAR
 <#if interface.vars?has_content>
 <#list interface.vars as var>
-    ${var.name}: ${var.type};
+    ${var.name}: ${var.type}<#if var.value??> := ${var.value}</#if>;
 </#list>
 </#if>
 END_VAR
@@ -78,7 +122,24 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>6b0acaae-61be-43bc-91ff-e7d8381ba8e8</ObjectId>
+            <ObjectId>6b0acaae-61be-42bc-91ff-e7d8381ba8e8</ObjectId>
           </data>
         </addData>
       </pou>
+    </pous>
+  </types>
+  <instances>
+    <configurations />
+  </instances>
+  <addData>
+    <data name="http://www.3s-software.com/plcopenxml/projectstructure" handleUnknown="discard">
+      <ProjectStructure>
+        <Folder Name="Libraries">
+          <Folder Name="log-lib">
+            <Object Name="${pou.name}" ObjectId="6b0acaae-61be-42bc-91ff-e7d8381ba8e8" />
+          </Folder>
+        </Folder>
+      </ProjectStructure>
+    </data>
+  </addData>
+</project>

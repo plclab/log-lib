@@ -7,21 +7,21 @@ FUNCTION ${pou.name} : ${interface.returnType}
 VAR_INPUT
 <#if interface.inputVars?has_content>
 <#list interface.inputVars as inputVar>
-    ${inputVar.name}: ${inputVar.type};
+    ${inputVar.name}: ${inputVar.type}<#if inputVar.value??> := ${inputVar.value}</#if>;
 </#list>
 </#if>
 END_VAR
 <#if interface.inOutVars?has_content>
 VAR_IN_OUT
 <#list interface.inOutVars as inOutVar>
-    ${inOutVar.name}: ${inOutVar.type};
+    ${inOutVar.name}: ${inOutVar.type}<#if inOutVar.value??> := ${inOutVar.value}</#if>;
 </#list>
 END_VAR
 </#if>
 VAR
 <#if interface.vars?has_content>
 <#list interface.vars as var>
-    ${var.name}: ${var.type};
+    ${var.name}: ${var.type}<#if var.value??> := ${var.value}</#if>;
 </#list>
 </#if>
 END_VAR

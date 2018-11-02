@@ -16,7 +16,7 @@ public class PlcOpenXmlTemplateProcessor extends StructuredTextTemplateProcessor
 	
 	@Override
 	public String getGlobalVariableListTemplate() {
-		return null; //TODO
+		return "GlobalVariableList.ftlx";
 	}
 	
 	@Override
