@@ -40,6 +40,30 @@ public abstract class StructuredTextTemplateProcessor extends TemplateProcessor 
 		}
 
 	}
+	
+	@Override
+	public TemplateData getGlobalConstantsTemplateData() {
+		
+		final TemplateData templateData = new TemplateData();
+		
+		final String name = "LogLibCore";
+		
+		templateData.setOutputFileName(name + "." + getOutputExtension());
+		
+		templateData.addNode("name", name);
+		
+		templateData.addNode("constant", true);
+		
+		final ArrayList<Variable> vars = new ArrayList<Variable>();
+		templateData.addNode("vars", vars);
+		
+		for (Constant constant : Constant.values()) {
+			vars.add(new Variable(constant.name(), "BYTE", "" + constant.getValue()));
+		}
+		
+		return templateData;
+		
+	}
 
 	@Override
 	public TemplateData getEvtFunctionTemplateData(Key[] keys) {

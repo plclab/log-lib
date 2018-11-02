@@ -15,6 +15,11 @@ public class ExpTemplateProcessor extends StructuredTextTemplateProcessor {
 	}
 	
 	@Override
+	public String getGlobalVariableListTemplate() {
+		return "GlobalVariableList.ftl";
+	}
+	
+	@Override
 	public String getFuctionTemplate() {
 		return "Function.ftl";
 	}

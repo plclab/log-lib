@@ -35,13 +35,22 @@ public abstract class LogLibImpl {
 
 			final int outputMode = getOutputMode();
 			
-			Key[] keys;
 			Template template;
 			TemplateData templateData;
-			String outputFile;
 
 			final TemplateProcessor templateProcessor = getTemplateProcessor();
 
+			//Create global constants
+			template = configuration.getTemplate(
+					templateProcessor.getTemplateDirectory()
+					+ "/" + templateProcessor.getGlobalVariableListTemplate());
+			
+			templateData = templateProcessor.getGlobalConstantsTemplateData();
+			
+			processTemplate(template, templateData, outputMode);
+			
+			//Create Evt functions
+			Key[] keys;
 			for (Constant constant : Constant.values()) {
 
 				template = null;
@@ -70,27 +79,7 @@ public abstract class LogLibImpl {
 
 				}
 				
-				if (template != null && templateData != null) {
-
-					switch (outputMode) {
-					
-					case OUTPUT_MODE_MULTIPLE_FILES:
-						
-						outputFile = "log-lib/" + getOuputDirectory() + "/core/" + templateData.getOutputFileName();
-
-						final Writer out = new OutputStreamWriter(
-								new FileOutputStream(new File(outputFile)));
-						
-						template.process(templateData.getModel(), out);
-						
-						break;
-
-					default:
-						break;
-					}
-
-				}
-
+				processTemplate(template, templateData, outputMode);
 
 			}
 
@@ -98,6 +87,37 @@ public abstract class LogLibImpl {
 			e.printStackTrace();
 		}
 
+	}
+	
+	private void processTemplate(Template template, TemplateData templateData, int outputMode) {
+		
+		if (template != null && templateData != null) {
+
+			try {
+
+				switch (outputMode) {
+
+				case OUTPUT_MODE_MULTIPLE_FILES:
+
+					final String outputFile = "log-lib/" + getOuputDirectory() + "/core/" + templateData.getOutputFileName();
+
+					final Writer out = new OutputStreamWriter(
+							new FileOutputStream(new File(outputFile)));
+
+					template.process(templateData.getModel(), out);
+
+					break;
+
+				default:
+					break;
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+		}
+		
 	}
 
 }
