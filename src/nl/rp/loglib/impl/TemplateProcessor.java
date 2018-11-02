@@ -1,4 +1,4 @@
-package nl.rp.loglib.template;
+package nl.rp.loglib.impl;
 
 import nl.rp.loglib.DataType;
 import nl.rp.loglib.Key;

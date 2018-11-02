@@ -1,6 +1,6 @@
-package nl.rp.loglib.template.codesys.v3.plcopenxml;
+package nl.rp.loglib.impl.codesys.v3;
 
-import nl.rp.loglib.template.codesys.StructuredTextTemplateProcessor;
+import nl.rp.loglib.impl.codesys.StructuredTextTemplateProcessor;
 
 public class PlcOpenXmlTemplateProcessor extends StructuredTextTemplateProcessor {
 

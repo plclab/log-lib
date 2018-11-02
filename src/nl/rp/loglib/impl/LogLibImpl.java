@@ -9,8 +9,6 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import nl.rp.loglib.Constant;
 import nl.rp.loglib.Key;
-import nl.rp.loglib.template.TemplateData;
-import nl.rp.loglib.template.TemplateProcessor;
 
 public abstract class LogLibImpl {
 

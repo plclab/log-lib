@@ -1,8 +1,7 @@
 package nl.rp.loglib.impl.codesys.v2;
 
 import nl.rp.loglib.impl.LogLibImpl;
-import nl.rp.loglib.template.TemplateProcessor;
-import nl.rp.loglib.template.codesys.v2.exp.ExpTemplateProcessor;
+import nl.rp.loglib.impl.TemplateProcessor;
 
 public class CoDeSysV2 extends LogLibImpl {
 	

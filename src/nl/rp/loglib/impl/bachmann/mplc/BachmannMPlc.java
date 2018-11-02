@@ -1,8 +1,8 @@
 package nl.rp.loglib.impl.bachmann.mplc;
 
 import nl.rp.loglib.impl.LogLibImpl;
-import nl.rp.loglib.template.TemplateProcessor;
-import nl.rp.loglib.template.codesys.v2.exp.ExpTemplateProcessor;
+import nl.rp.loglib.impl.TemplateProcessor;
+import nl.rp.loglib.impl.codesys.v2.ExpTemplateProcessor;
 
 public class BachmannMPlc extends LogLibImpl {
 	

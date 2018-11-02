@@ -1,4 +1,4 @@
-package nl.rp.loglib.template.codesys;
+package nl.rp.loglib.impl.codesys;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,8 +8,8 @@ import nl.rp.loglib.Constant;
 import nl.rp.loglib.DataType;
 import nl.rp.loglib.Key;
 import nl.rp.loglib.Variable;
-import nl.rp.loglib.template.TemplateData;
-import nl.rp.loglib.template.TemplateProcessor;
+import nl.rp.loglib.impl.TemplateData;
+import nl.rp.loglib.impl.TemplateProcessor;
 
 public abstract class StructuredTextTemplateProcessor extends TemplateProcessor {
 

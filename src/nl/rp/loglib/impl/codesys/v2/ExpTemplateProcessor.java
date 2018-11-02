@@ -1,6 +1,6 @@
-package nl.rp.loglib.template.codesys.v2.exp;
+package nl.rp.loglib.impl.codesys.v2;
 
-import nl.rp.loglib.template.codesys.StructuredTextTemplateProcessor;
+import nl.rp.loglib.impl.codesys.StructuredTextTemplateProcessor;
 
 public class ExpTemplateProcessor extends StructuredTextTemplateProcessor {
 

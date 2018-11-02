@@ -1,4 +1,4 @@
-package nl.rp.loglib.template;
+package nl.rp.loglib.impl;
 
 import java.util.HashMap;
 import java.util.Map;
