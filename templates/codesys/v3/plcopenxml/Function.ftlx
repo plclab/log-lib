@@ -1,0 +1,84 @@
+
+      <pou name="${pou.name}" pouType="function">
+        <interface>
+          <returnType>
+            <${interface.returnType} />
+          </returnType>
+          <#if interface.inputVars?has_content>
+          <inputVars>
+            <#list interface.inputVars as inputVar>
+            <variable name="${inputVar.name}">
+              <type>
+                <${inputVar.type} />
+              </type>
+            </variable>
+            </#list>
+          </inputVars>
+          </#if>
+          <#if interface.inOutVars?has_content>
+          <inOutVars>
+            <#list interface.inOutVars as inOutVar>
+            <variable name="${inOutVar.name}">
+              <type>
+                <${inOutVar.type} />
+              </type>
+            </variable>
+            </#list>
+          </inOutVars>
+          </#if>
+          <#if interface.vars?has_content>
+          <localVars>
+            <#list interface.vars as var>
+            <variable name="${var.name}">
+              <type>
+                <${var.type} />
+              </type>
+            </variable>
+            </#list>
+          </localVars>
+          </#if>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">
+<#if body.instructions?has_content>
+<#list body.instructions as instruction>
+${instruction}
+</#list>
+</#if>
+            </xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION ${pou.name} : ${interface.returnType}
+VAR_INPUT
+<#if interface.inputVars?has_content>
+<#list interface.inputVars as inputVar>
+    ${inputVar.name}: ${inputVar.type};
+</#list>
+</#if>
+END_VAR
+<#if interface.inOutVars?has_content>
+VAR_IN_OUT
+<#list interface.inOutVars as inOutVar>
+    ${inOutVar.name}: ${inOutVar.type};
+</#list>
+END_VAR
+</#if>
+VAR
+<#if interface.vars?has_content>
+<#list interface.vars as var>
+    ${var.name}: ${var.type};
+</#list>
+</#if>
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>6b0acaae-61be-43bc-91ff-e7d8381ba8e8</ObjectId>
+          </data>
+        </addData>
+      </pou>
