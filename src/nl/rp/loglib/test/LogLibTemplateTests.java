@@ -15,6 +15,8 @@ public class LogLibTemplateTests {
 
 		try {
 
+			createOutputDirectories();
+			
 			// Create your Configuration instance, and specify if up to what FreeMarker
 			// version (here 2.3.28) do you want to apply the fixes that are not 100%
 			// backward-compatible. See the Configuration JavaDoc for details.
@@ -49,6 +51,37 @@ public class LogLibTemplateTests {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+	}
+	
+	private void createOutputDirectories() {
+		
+		new File("log-lib").mkdirs();
+		
+		//CoDeSys V2
+		new File("log-lib/codesys/v2/basic").mkdirs();
+		new File("log-lib/codesys/v2/comm/tcp").mkdirs();
+		new File("log-lib/codesys/v2/core").mkdirs();
+
+		//CoDeSys V3
+		new File("log-lib/codesys/v3/basic").mkdirs();
+		new File("log-lib/codesys/v3/comm/tcp").mkdirs();
+		new File("log-lib/codesys/v3/core").mkdirs();
+
+		//Bachmann M-Plc
+		new File("log-lib/bachmann/mplc/basic").mkdirs();
+		new File("log-lib/bachmann/mplc/comm/tcp").mkdirs();
+		new File("log-lib/bachmann/mplc/core").mkdirs();
+
+		//Beckhoff TwinCAT 2
+		new File("log-lib/beckhoff/tc2/basic").mkdirs();
+		new File("log-lib/beckhoff/tc2/comm/tcp").mkdirs();
+		new File("log-lib/beckhoff/tc2/core").mkdirs();
+
+		//Beckhoff TwinCAT 3
+		new File("log-lib/beckhoff/tc3/basic").mkdirs();
+		new File("log-lib/beckhoff/tc3/comm/tcp").mkdirs();
+		new File("log-lib/beckhoff/tc3/core").mkdirs();
 
 	}
 
