@@ -3,6 +3,7 @@ package nl.rp.loglib;
 public enum Key {
 
 	EVT("Evt", "Event", DataType.NONE),
+	NULL("Null", "Null", DataType.NONE),
 	GR8("Gr8", "Group", DataType.UINT8),
 	GR16("Gr16", "Group", DataType.UINT16),
 	ID8("Id8", "Id", DataType.UINT8),

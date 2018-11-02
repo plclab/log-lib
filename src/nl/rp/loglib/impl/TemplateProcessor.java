@@ -46,4 +46,16 @@ public abstract class TemplateProcessor {
 		
 	}
 	
+	public static String keysToString(Key[] keys) {
+		
+		String keyString = "";
+		
+		for (int i = 0; i < keys.length; i++) {
+			keyString += keys[i].name() + (i < keys.length - 1? "_":"");
+		}
+		
+		return keyString;
+		
+	}
+	
 }

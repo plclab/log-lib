@@ -58,7 +58,7 @@ public abstract class LogLibImpl {
 			
 			//Create Evt functions
 			Key[] keys;
-			for (Constant constant : Constant.values()) {
+			for (Constant constant : Constant.CORE_EVENTS) {
 
 				template = null;
 				templateData = null;

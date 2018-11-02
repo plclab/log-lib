@@ -85,7 +85,7 @@ public abstract class StructuredTextTemplateProcessor extends TemplateProcessor 
 		vars.add(new Variable("BufferSize", "UDINT"));
 		vars.add(new Variable("BufferWritePointer", "DINT"));
 		vars.add(new Variable("BufferReadPointer", "DINT"));
-		vars.add(new Variable("MagicByte", "BYTE"));
+		vars.add(new Variable("MagicByte", "BYTE", Constant.MAGIC_BYTE_V1_LITTLE_ENDIAN.name()));
 		
 		return templateData;
 		
@@ -101,6 +101,7 @@ public abstract class StructuredTextTemplateProcessor extends TemplateProcessor 
 		final ArrayList<String> mainInstructions = new ArrayList<String>();	
 		addEvtP1Instruction(mainInstructions, Constant.START_FLAG.name());
 		addEvtP1Instruction(mainInstructions, "Handle.MagicByte");
+		addEvtP1Instruction(mainInstructions, keysToString(keys));
 
 		boolean createP2Var = false;
 
@@ -113,6 +114,10 @@ public abstract class StructuredTextTemplateProcessor extends TemplateProcessor 
 			switch (key) {
 
 			case EVT:
+				functionName += key.shortName;
+				break;
+
+			case NULL:
 				functionName += key.shortName;
 				break;
 
