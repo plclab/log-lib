@@ -49,6 +49,15 @@ public abstract class LogLibImpl {
 			
 			processTemplate(template, templateData, outputMode);
 			
+			//Create LogBufferHandle struct
+			template = configuration.getTemplate(
+					templateProcessor.getTemplateDirectory()
+					+ "/" + templateProcessor.getStructTemplate());
+			
+			templateData = templateProcessor.getLogBufferHandleStructTemplateData();
+			
+			processTemplate(template, templateData, outputMode);			
+			
 			//Create Evt functions
 			Key[] keys;
 			for (Constant constant : Constant.values()) {

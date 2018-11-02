@@ -20,6 +20,11 @@ public class ExpTemplateProcessor extends StructuredTextTemplateProcessor {
 	}
 	
 	@Override
+	public String getStructTemplate() {
+		return "Struct.ftl";
+	}
+	
+	@Override
 	public String getFuctionTemplate() {
 		return "Function.ftl";
 	}

@@ -13,13 +13,17 @@ public abstract class TemplateProcessor {
 	public abstract String getTemplateDirectory();
 
 	public abstract String getGlobalVariableListTemplate();
-	
+
+	public abstract String getStructTemplate();
+
 	public abstract String getFuctionTemplate();
 
 	public abstract String getDataType(DataType dataType);
 	
 	public abstract TemplateData getGlobalConstantsTemplateData();
-	
+
+	public abstract TemplateData getLogBufferHandleStructTemplateData();
+
 	public abstract TemplateData getEvtFunctionTemplateData(Key[] keys);
 	
 	public abstract String getOutputExtension();

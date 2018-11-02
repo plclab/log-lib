@@ -64,6 +64,32 @@ public abstract class StructuredTextTemplateProcessor extends TemplateProcessor 
 		return templateData;
 		
 	}
+	
+	@Override
+	public TemplateData getLogBufferHandleStructTemplateData() {
+
+		final TemplateData templateData = new TemplateData();
+		
+		final String name = "LogBufferHandle";
+
+		templateData.setOutputFileName(name + "." + getOutputExtension());
+
+		templateData.addNode("path", new String[] {"core"});
+		
+		templateData.addNode("name", name);
+
+		final ArrayList<Variable> vars = new ArrayList<Variable>();
+		templateData.addNode("vars", vars);
+
+		vars.add(new Variable("BufferAddress", "DWORD"));
+		vars.add(new Variable("BufferSize", "UDINT"));
+		vars.add(new Variable("BufferWritePointer", "DINT"));
+		vars.add(new Variable("BufferReadPointer", "DINT"));
+		vars.add(new Variable("MagicByte", "BYTE"));
+		
+		return templateData;
+		
+	}
 
 	@Override
 	public TemplateData getEvtFunctionTemplateData(Key[] keys) {
@@ -239,12 +265,12 @@ public abstract class StructuredTextTemplateProcessor extends TemplateProcessor 
 		bodyNode.put("instructions", instructions);
 
 		instructions.add("");
-		instructions.add("start := Data.BufferAddress;");
+		instructions.add("start := Handle.BufferAddress;");
 		instructions.add("end := start + (Handle.BufferSize - 1);");
 		instructions.add("p1 := Handle.BufferAddress + Handle.BufferWritePointer;");
 		instructions.add("");
 		instructions.addAll(mainInstructions);
-		instructions.add("Handle.BufferWritePointer := DWORD_TO_UINT(p1 - start);");
+		instructions.add("Handle.BufferWritePointer := DWORD_TO_DINT(p1 - start);");
 		instructions.add("");
 
 		return templateData;
