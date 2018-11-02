@@ -1,3 +1,8 @@
+
+(* @NESTEDCOMMENTS := 'No' *)
+(* @PATH := '<#if pou.path?has_content><#list pou.path as dir>\/${dir}</#list></#if>' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
 FUNCTION ${pou.name} : ${interface.returnType}
 VAR_INPUT
 <#if interface.inputVars?has_content>
@@ -20,8 +25,10 @@ VAR
 </#list>
 </#if>
 END_VAR
+(* @END_DECLARATION := '0' *)
 <#if body.instructions?has_content>
 <#list body.instructions as instruction>
 ${instruction}
 </#list>
 </#if>
+END_FUNCTION

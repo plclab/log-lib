@@ -214,6 +214,7 @@ public abstract class StructuredTextTemplateProcessor extends TemplateProcessor 
 		final Map<String, Object> bodyNode = new HashMap<>();
 		templateData.addNode("body", bodyNode);
 
+		pouNode.put("path", new String[] {"core", "evt"});
 		pouNode.put("name", functionName);
 
 		interfaceNode.put("returnType", getDataType(DataType.BOOL8));
