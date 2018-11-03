@@ -76,8 +76,8 @@ public class JavaTemplateFactory extends TemplateFactory {
 		
 		final ArrayList<String> instructions = new ArrayList<String>();	
 		instructions.add("i = bufferWritePointer;");
-		addEvtInstruction(instructions, Constant.START_FLAG.name());
-		addEvtInstruction(instructions, "magicByte");
+		addNextInstruction(instructions, Constant.START_FLAG.name());
+		addNextInstruction(instructions, "magicByte");
 
 		method.put("modifiers", new String[] {"private"});
 		method.put("returnType", "void");
@@ -115,7 +115,7 @@ public class JavaTemplateFactory extends TemplateFactory {
 		final Map<String, Object> method = new HashMap<>();
 		
 		final ArrayList<String> instructions = new ArrayList<String>();	
-		addEvtInstruction(instructions, Constant.END_FLAG.name());
+		addNextInstruction(instructions, Constant.END_FLAG.name());
 		instructions.add("bufferWritePointer = i;");
 
 		method.put("modifiers", new String[] {"private"});
@@ -137,7 +137,7 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 		final ArrayList<String> instructions = new ArrayList<String>();	
 		instructions.add("begin();");
-		addEvtInstruction(instructions, Key.keysToString(keys));
+		addNextInstruction(instructions, Key.keysToString(keys));
 
 		String fullName;
 		for (Key key : keys) {
@@ -161,66 +161,66 @@ public class JavaTemplateFactory extends TemplateFactory {
 			case GR8:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addEvtInstruction(instructions, fullName);
+				addNextInstruction(instructions, fullName);
 				break;
 
 			case GR16:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addEvtInstruction(instructions, "(byte)(" + fullName + " & 0xff)");
-				addEvtInstruction(instructions, "(byte)((" + fullName + " >> 8) & 0xff)");
+				addNextInstruction(instructions, fullName, 0);
+				addNextInstruction(instructions, fullName, 1);
 				break;
 
 			case ID8:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addEvtInstruction(instructions, fullName);
+				addNextInstruction(instructions, fullName);
 				break;
 
 			case ID16:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addEvtInstruction(instructions, "(byte)(" + fullName + " & 0xff)");
-				addEvtInstruction(instructions, "(byte)((" + fullName + " >> 8) & 0xff)");
+				addNextInstruction(instructions, fullName, 0);
+				addNextInstruction(instructions, fullName, 1);
 				break;
 
 			case CH8:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addEvtInstruction(instructions, fullName);
+				addNextInstruction(instructions, fullName);
 				break;
 
 			case CH16:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addEvtInstruction(instructions, "(byte)(" + fullName + " & 0xff)");
-				addEvtInstruction(instructions, "(byte)((" + fullName + " >> 8) & 0xff)");
+				addNextInstruction(instructions, fullName, 0);
+				addNextInstruction(instructions, fullName, 1);
 				break;
 
 			case BOOL8:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addEvtInstruction(instructions, "(byte)(" + fullName + "? 1:0)");
+				addNextInstruction(instructions, "(byte)(" + fullName + "? 1:0)");
 				break;
 
 			case INT8:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addEvtInstruction(instructions, fullName);
+				addNextInstruction(instructions, fullName);
 				break;
 				
 			case UINT8:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addEvtInstruction(instructions, "(byte)(" + fullName + " & 0xff)");
+				addNextInstruction(instructions, fullName);
 				break;
 
 			case INT16:
 			case UINT16:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addEvtInstruction(instructions, "(byte)(" + fullName + " & 0xff)");
-				addEvtInstruction(instructions, "(byte)((" + fullName + " >> 8) & 0xff)");
+				addNextInstruction(instructions, fullName, 0);
+				addNextInstruction(instructions, fullName, 1);
 				break;
 
 			case TICK32:
@@ -228,10 +228,10 @@ public class JavaTemplateFactory extends TemplateFactory {
 			case UINT32:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addEvtInstruction(instructions, "(byte)(" + fullName + " & 0xff)");
-				addEvtInstruction(instructions, "(byte)((" + fullName + " >> 8) & 0xff)");
-				addEvtInstruction(instructions, "(byte)((" + fullName + " >> 16) & 0xff)");
-				addEvtInstruction(instructions, "(byte)((" + fullName + " >> 24) & 0xff)");
+				addNextInstruction(instructions, fullName, 0);
+				addNextInstruction(instructions, fullName, 1);
+				addNextInstruction(instructions, fullName, 2);
+				addNextInstruction(instructions, fullName, 3);
 				break;
 
 			case REAL32:
@@ -269,8 +269,16 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 	}
 	
-	private void addEvtInstruction(ArrayList<String> instructions, String evtInstruction) {
-		instructions.add("next(" + evtInstruction + ");");
+	private void addNextInstruction(ArrayList<String> instructions, String value) {
+		instructions.add("next(" + value + ");");
+	}
+	
+	private void addNextInstruction(ArrayList<String> instructions, String value, int byteIndex) {
+		if (byteIndex > 0) {
+			instructions.add("next((byte)((" + value + " >> " + (byteIndex * 8) + ") & 0xff));");
+		} else {
+			instructions.add("next((byte)(" + value + " & 0xff));");
+		}
 	}
 
 }
