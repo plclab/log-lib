@@ -63,8 +63,18 @@ public class Java extends LogLibImpl {
 			//Create buffer members
 			vars.addAll(templateFactory.getMembers());
 
+			//Create begin method
+			methods.add(templateFactory.getBeginMethod());
+
+			//Create next method
+			methods.add(templateFactory.getNextMethod());
+
+			//Create end method
+			methods.add(templateFactory.getEndMethod());
+
 			//Create Evt methods
 			Key[] keys;
+			Map<String, Object> method;
 			for (Constant constant : Constant.CORE_EVENTS) {
 
 				keys = Key.stringToKeys(constant.name());
@@ -75,7 +85,12 @@ public class Java extends LogLibImpl {
 					switch (keys[0]) {
 
 					case EVT:
-						methods.add(templateFactory.getEvtMethod(keys));
+						
+						method = templateFactory.getEvtMethod(keys);
+						if (method != null) {
+							methods.add(method);							
+						}
+						
 						break;
 
 					default:

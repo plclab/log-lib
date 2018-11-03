@@ -1,4 +1,4 @@
-packacge ${class.package}
+package ${class.package};
 <#if class.imports?has_content>
 
 <#list class.imports as import>
