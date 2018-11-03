@@ -5,7 +5,7 @@ import java.io.File;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import nl.rp.loglib.impl.LogLibImpl;
-import nl.rp.loglib.impl.bachmann.mplc.BachmannMPlc;
+import nl.rp.loglib.impl.java.Java;
 
 public class LogLibTemplateTests {
 
@@ -43,15 +43,17 @@ public class LogLibTemplateTests {
 
 			/*
 			logLibImpl = new CoDeSysV2();
-			logLibImpl.generateLogLibCore(configuration);
+			logLibImpl.generate(configuration);
 
 			logLibImpl = new CoDeSysV3();
-			logLibImpl.generateLogLibCore(configuration);
+			logLibImpl.generate(configuration);
+
+			logLibImpl = new BachmannMPlc();
+			logLibImpl.generate(configuration);
 			*/
 			
-			logLibImpl = new BachmannMPlc();
-			logLibImpl.generateLogLibCore(configuration);
-
+			logLibImpl = new Java();
+			logLibImpl.generate(configuration);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -87,6 +89,11 @@ public class LogLibTemplateTests {
 		new File("log-lib/beckhoff/tc3/basic").mkdirs();
 		new File("log-lib/beckhoff/tc3/comm/tcp").mkdirs();
 		new File("log-lib/beckhoff/tc3/core").mkdirs();
+
+		//Java
+		new File("log-lib/java/basic").mkdirs();
+		new File("log-lib/java/comm/tcp").mkdirs();
+		new File("log-lib/java/core").mkdirs();
 
 	}
 

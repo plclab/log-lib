@@ -11,7 +11,7 @@ import nl.rp.loglib.Variable;
 import nl.rp.loglib.impl.TemplateData;
 import nl.rp.loglib.impl.TemplateProcessor;
 
-public abstract class StructuredTextTemplateProcessor extends TemplateProcessor {
+public class StructuredTextTemplateProcessor extends TemplateProcessor {
 
 
 	public StructuredTextTemplateProcessor() {
@@ -41,20 +41,19 @@ public abstract class StructuredTextTemplateProcessor extends TemplateProcessor 
 
 	}
 	
-	@Override
 	public TemplateData getGlobalConstantsTemplateData() {
 		
 		final TemplateData templateData = new TemplateData();
 		
 		final String name = "LogLibCore";
 		
-		templateData.setOutputFileName(name + "." + getOutputExtension());
+		templateData.setOutputFileName(name);
 		
 		templateData.addNode("name", name);
 		
 		templateData.addNode("constant", true);
 		
-		final ArrayList<Variable> vars = new ArrayList<Variable>();
+		final ArrayList<Variable> vars = new ArrayList<>();
 		templateData.addNode("vars", vars);
 		
 		for (Constant constant : Constant.values()) {
@@ -65,20 +64,19 @@ public abstract class StructuredTextTemplateProcessor extends TemplateProcessor 
 		
 	}
 	
-	@Override
 	public TemplateData getLogBufferHandleStructTemplateData() {
 
 		final TemplateData templateData = new TemplateData();
 		
 		final String name = "LogBufferHandle";
 
-		templateData.setOutputFileName(name + "." + getOutputExtension());
+		templateData.setOutputFileName(name);
 
 		templateData.addNode("path", new String[] {"core"});
 		
 		templateData.addNode("name", name);
 
-		final ArrayList<Variable> vars = new ArrayList<Variable>();
+		final ArrayList<Variable> vars = new ArrayList<>();
 		templateData.addNode("vars", vars);
 
 		vars.add(new Variable("BufferAddress", "DWORD"));
@@ -91,12 +89,11 @@ public abstract class StructuredTextTemplateProcessor extends TemplateProcessor 
 		
 	}
 
-	@Override
 	public TemplateData getEvtFunctionTemplateData(Key[] keys) {
 
 		String functionName = "";
 
-		final ArrayList<Variable> inputVars = new ArrayList<Variable>();	
+		final ArrayList<Variable> inputVars = new ArrayList<>();	
 
 		final ArrayList<String> mainInstructions = new ArrayList<String>();	
 		addEvtP1Instruction(mainInstructions, Constant.START_FLAG.name());
@@ -234,7 +231,7 @@ public abstract class StructuredTextTemplateProcessor extends TemplateProcessor 
 		addEvtP1Instruction(mainInstructions, Constant.END_FLAG.name());
 
 		final TemplateData templateData = new TemplateData();
-		templateData.setOutputFileName(functionName + "." + getOutputExtension());
+		templateData.setOutputFileName(functionName);
 
 		final Map<String, Object> pouNode = new HashMap<>();
 		templateData.addNode("pou", pouNode);
@@ -256,7 +253,7 @@ public abstract class StructuredTextTemplateProcessor extends TemplateProcessor 
 				new Variable("Handle", "LogBufferHandle")
 		});
 
-		final ArrayList<Variable> vars = new ArrayList<Variable>();
+		final ArrayList<Variable> vars = new ArrayList<>();
 		interfaceNode.put("vars", vars);
 
 		vars.add(new Variable("start", "DWORD"));
@@ -266,7 +263,7 @@ public abstract class StructuredTextTemplateProcessor extends TemplateProcessor 
 			vars.add(new Variable("p2", "POINTER TO BYTE"));
 		}
 
-		final ArrayList<String> instructions = new ArrayList<String>();
+		final ArrayList<String> instructions = new ArrayList<>();
 		bodyNode.put("instructions", instructions);
 
 		instructions.add("");
