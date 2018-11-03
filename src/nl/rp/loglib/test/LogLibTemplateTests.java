@@ -5,6 +5,7 @@ import java.io.File;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import nl.rp.loglib.impl.LogLibImpl;
+import nl.rp.loglib.impl.bachmann.mplc.BachmannMPlc;
 import nl.rp.loglib.impl.java.Java;
 
 public class LogLibTemplateTests {
@@ -47,11 +48,11 @@ public class LogLibTemplateTests {
 
 			logLibImpl = new CoDeSysV3();
 			logLibImpl.generate(configuration);
+			*/
 
 			logLibImpl = new BachmannMPlc();
 			logLibImpl.generate(configuration);
-			*/
-			
+
 			logLibImpl = new Java();
 			logLibImpl.generate(configuration);
 			

@@ -89,6 +89,66 @@ public class StructuredTextTemplateProcessor extends TemplateProcessor {
 		
 	}
 
+	public TemplateData getCreateBufferHandleFunctionTemplateData() {
+
+		final TemplateData templateData = new TemplateData();
+
+		final String functionName = "CreateBufferHandle";
+
+		templateData.setOutputFileName(functionName);
+
+		final Map<String, Object> pouNode = new HashMap<>();
+		templateData.addNode("pou", pouNode);
+
+		final Map<String, Object> interfaceNode = new HashMap<>();
+		templateData.addNode("interface", interfaceNode);
+
+		final Map<String, Object> bodyNode = new HashMap<>();
+		templateData.addNode("body", bodyNode);
+
+		pouNode.put("path", new String[] {"core"});
+		pouNode.put("name", functionName);
+
+		interfaceNode.put("returnType", getDataType(DataType.BOOL8));
+
+		final ArrayList<Variable> inputVars = new ArrayList<>();	
+		interfaceNode.put("inputVars", inputVars);
+
+		inputVars.add(new Variable("BufferAddress", "DWORD"));
+		inputVars.add(new Variable("BufferSize", "DINT"));
+
+		interfaceNode.put("inOutVars", new Variable[] {
+				new Variable("Handle", "LogBufferHandle")
+		});
+
+		final ArrayList<Variable> vars = new ArrayList<>();
+		interfaceNode.put("vars", vars);
+
+		vars.add(new Variable("byteOrderInt", "INT"));
+		vars.add(new Variable("byteOrderArray", "ARRAY[0..1] OF BYTE"));
+		vars.add(new Variable("pInt", "POINTER TO INT"));
+		
+		final ArrayList<String> instructions = new ArrayList<>();
+		bodyNode.put("instructions", instructions);
+
+		instructions.add("");
+		instructions.add("Handle.BufferAddress := BufferAddress;");
+		instructions.add("Handle.BufferSize := BufferSize;");
+		instructions.add("");
+		instructions.add("byteOrderInt := 1;");
+		instructions.add("pInt := ADR(byteOrderArray[0]);");
+		instructions.add("IF byteOrderArray[0] = 1 THEN");
+		instructions.add("    Handle.MagicByte := " + Constant.MAGIC_BYTE_V1_BIG_ENDIAN.name() + ";");
+		instructions.add("ELSE");
+		instructions.add("    Handle.MagicByte := " + Constant.MAGIC_BYTE_V1_LITTLE_ENDIAN.name() + ";");
+		instructions.add("END_IF");
+		instructions.add("");
+
+		return templateData;
+		
+	}
+	
+	
 	public TemplateData getEvtFunctionTemplateData(Key[] keys) {
 
 		String functionName = "";

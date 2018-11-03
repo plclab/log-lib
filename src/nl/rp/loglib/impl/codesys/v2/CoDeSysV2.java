@@ -41,23 +41,23 @@ public class CoDeSysV2 extends LogLibImpl {
 
 			//Create global constants
 			template = configuration.getTemplate(TEMPLATE_DIR + "/GlobalVariableList.ftl");
-
 			templateData = templateProcessor.getGlobalConstantsTemplateData();
-
 			processTemplate(template, templateData);
 
 			//Create LogBufferHandle struct
 			template = configuration.getTemplate(TEMPLATE_DIR + "/Struct.ftl");
-
 			templateData = templateProcessor.getLogBufferHandleStructTemplateData();
-
 			processTemplate(template, templateData);			
 
+			//Create CreateBufferHandle function
+			template = configuration.getTemplate(TEMPLATE_DIR + "/Function.ftl");
+			templateData = templateProcessor.getCreateBufferHandleFunctionTemplateData();
+			processTemplate(template, templateData);			
+			
 			//Create Evt functions
 			Key[] keys;
 			for (Constant constant : Constant.CORE_EVENTS) {
 
-				template = null;
 				templateData = null;
 
 				keys = TemplateProcessor.stringToKeys(constant.name());
@@ -68,12 +68,7 @@ public class CoDeSysV2 extends LogLibImpl {
 					switch (keys[0]) {
 
 					case EVT:
-
-						template = configuration.getTemplate(
-								TEMPLATE_DIR + "/Function.ftl");
-
 						templateData = templateProcessor.getEvtFunctionTemplateData(keys);
-
 						break;
 
 					default:
