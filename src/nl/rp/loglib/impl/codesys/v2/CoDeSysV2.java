@@ -11,18 +11,18 @@ import nl.rp.loglib.Constant;
 import nl.rp.loglib.Key;
 import nl.rp.loglib.impl.LogLibImpl;
 import nl.rp.loglib.impl.TemplateData;
-import nl.rp.loglib.impl.codesys.StructuredTextTemplateProcessor;
+import nl.rp.loglib.impl.codesys.StructuredTextTemplateFactory;
 
 public class CoDeSysV2 extends LogLibImpl {
 
 	public static final String TEMPLATE_DIR = "codesys/v2/exp";
 	public static final String OUTPUT_FILE_EXTENSION = ".EXP";
 
-	private final StructuredTextTemplateProcessor templateProcessor;
+	private final StructuredTextTemplateFactory templateFactory;
 
 
 	public CoDeSysV2() {
-		templateProcessor = new StructuredTextTemplateProcessor();
+		templateFactory = new StructuredTextTemplateFactory();
 	}
 
 	@Override
@@ -40,17 +40,17 @@ public class CoDeSysV2 extends LogLibImpl {
 
 			//Create global constants
 			template = configuration.getTemplate(TEMPLATE_DIR + "/GlobalVariableList.ftl");
-			templateData = templateProcessor.getGlobalConstantsTemplateData();
+			templateData = templateFactory.getGlobalConstantsTemplateData();
 			processTemplate(template, templateData);
 
 			//Create LogBufferHandle struct
 			template = configuration.getTemplate(TEMPLATE_DIR + "/Struct.ftl");
-			templateData = templateProcessor.getLogBufferHandleStructTemplateData();
+			templateData = templateFactory.getLogBufferHandleStructTemplateData();
 			processTemplate(template, templateData);			
 
 			//Create CreateBufferHandle function
 			template = configuration.getTemplate(TEMPLATE_DIR + "/Function.ftl");
-			templateData = templateProcessor.getCreateBufferHandleFunctionTemplateData();
+			templateData = templateFactory.getCreateBufferHandleFunctionTemplateData();
 			processTemplate(template, templateData);			
 			
 			//Create Evt functions
@@ -67,7 +67,7 @@ public class CoDeSysV2 extends LogLibImpl {
 					switch (keys[0]) {
 
 					case EVT:
-						templateData = templateProcessor.getEvtFunctionTemplateData(keys);
+						templateData = templateFactory.getEvtFunctionTemplateData(keys);
 						break;
 
 					default:

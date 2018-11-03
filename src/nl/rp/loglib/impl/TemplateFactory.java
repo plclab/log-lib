@@ -2,10 +2,10 @@ package nl.rp.loglib.impl;
 
 import nl.rp.loglib.DataType;
 
-public abstract class TemplateProcessor {
+public abstract class TemplateFactory {
 
 
-	public TemplateProcessor() {
+	public TemplateFactory() {
 
 	}
 

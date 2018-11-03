@@ -9,12 +9,12 @@ import nl.rp.loglib.DataType;
 import nl.rp.loglib.Key;
 import nl.rp.loglib.Variable;
 import nl.rp.loglib.impl.TemplateData;
-import nl.rp.loglib.impl.TemplateProcessor;
+import nl.rp.loglib.impl.TemplateFactory;
 
-public class StructuredTextTemplateProcessor extends TemplateProcessor {
+public class StructuredTextTemplateFactory extends TemplateFactory {
 
 
-	public StructuredTextTemplateProcessor() {
+	public StructuredTextTemplateFactory() {
 
 	}
 

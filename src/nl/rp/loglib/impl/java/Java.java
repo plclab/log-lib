@@ -21,11 +21,11 @@ public class Java extends LogLibImpl {
 	public static final String TEMPLATE_DIR = "java";
 	public static final String OUTPUT_FILE_EXTENSION = ".java";
 
-	private final JavaTemplateProcessor templateProcessor;
+	private final JavaTemplateFactory templateFactory;
 	
 	
 	public Java() {
-		templateProcessor = new JavaTemplateProcessor();
+		templateFactory = new JavaTemplateFactory();
 	}
 	
 	@Override
@@ -58,10 +58,10 @@ public class Java extends LogLibImpl {
 			classNode.put("methods", methods);
 
 			//Create constants
-			vars.addAll(templateProcessor.getConstants());
+			vars.addAll(templateFactory.getConstants());
 
 			//Create buffer members
-			vars.addAll(templateProcessor.getMembers());
+			vars.addAll(templateFactory.getMembers());
 
 			//Create Evt methods
 			Key[] keys;
@@ -75,7 +75,7 @@ public class Java extends LogLibImpl {
 					switch (keys[0]) {
 
 					case EVT:
-						methods.add(templateProcessor.getEvtMethod(keys));
+						methods.add(templateFactory.getEvtMethod(keys));
 						break;
 
 					default:
