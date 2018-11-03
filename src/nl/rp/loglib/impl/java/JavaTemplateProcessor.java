@@ -78,10 +78,11 @@ public class JavaTemplateProcessor extends TemplateProcessor {
 
 		final ArrayList<Variable> args = new ArrayList<Variable>();	
 
-		final ArrayList<String> mainInstructions = new ArrayList<String>();	
-		addEvtInstruction(mainInstructions, Constant.START_FLAG.name());
-		addEvtInstruction(mainInstructions, "magicByte");
-		addEvtInstruction(mainInstructions, keysToString(keys));
+		final ArrayList<String> instructions = new ArrayList<String>();	
+		instructions.add("");
+		addEvtInstruction(instructions, Constant.START_FLAG.name());
+		addEvtInstruction(instructions, "magicByte");
+		addEvtInstruction(instructions, keysToString(keys));
 
 		for (Key key : keys) {
 
@@ -102,43 +103,43 @@ public class JavaTemplateProcessor extends TemplateProcessor {
 			case GR8:
 				methodName += key.shortName;
 				args.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtInstruction(mainInstructions, key.fullName);
+				addEvtInstruction(instructions, key.fullName);
 				break;
 
 			case GR16:
 				methodName += key.shortName;
 				args.add(new Variable(key.fullName, getDataType(key.dataType)));
-				mainInstructions.add("//TODO");
+				instructions.add("//TODO");
 				break;
 
 			case ID8:
 				methodName += key.shortName;
 				args.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtInstruction(mainInstructions, key.fullName);
+				addEvtInstruction(instructions, key.fullName);
 				break;
 
 			case ID16:
 				methodName += key.shortName;
 				args.add(new Variable(key.fullName, getDataType(key.dataType)));
-				mainInstructions.add("//TODO: " + key.fullName);
+				instructions.add("//TODO: " + key.fullName);
 				break;
 
 			case CH8:
 				methodName += key.shortName;
 				args.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtInstruction(mainInstructions, key.fullName);
+				addEvtInstruction(instructions, key.fullName);
 				break;
 
 			case CH16:
 				methodName += key.shortName;
 				args.add(new Variable(key.fullName, getDataType(key.dataType)));
-				mainInstructions.add("//TODO: " + key.fullName);
+				instructions.add("//TODO: " + key.fullName);
 				break;
 
 			case BOOL8:
 				methodName += key.shortName;
 				args.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtInstruction(mainInstructions, "BOOL_TO_BYTE(" + key.fullName + ")");
+				addEvtInstruction(instructions, "BOOL_TO_BYTE(" + key.fullName + ")");
 				break;
 
 			case INT8:
@@ -147,14 +148,14 @@ public class JavaTemplateProcessor extends TemplateProcessor {
 			case UINT8:
 				methodName += key.shortName;
 				args.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtInstruction(mainInstructions, key.fullName);
+				addEvtInstruction(instructions, key.fullName);
 				break;
 
 			case INT16:
 			case UINT16:
 				methodName += key.shortName;
 				args.add(new Variable(key.fullName, getDataType(key.dataType)));
-				mainInstructions.add("//TODO: " + key.fullName);
+				instructions.add("//TODO: " + key.fullName);
 				break;
 
 			case TICK32:
@@ -163,7 +164,7 @@ public class JavaTemplateProcessor extends TemplateProcessor {
 			case REAL32:
 				methodName += key.shortName;
 				args.add(new Variable(key.fullName, getDataType(key.dataType)));
-				mainInstructions.add("//TODO: " + key.fullName);
+				instructions.add("//TODO: " + key.fullName);
 				break;
 
 			case INT64:
@@ -176,7 +177,7 @@ public class JavaTemplateProcessor extends TemplateProcessor {
 			case REAL64:
 				methodName += key.shortName;
 				args.add(new Variable(key.fullName, getDataType(key.dataType)));
-				mainInstructions.add("//TODO: " + key.fullName);
+				instructions.add("//TODO: " + key.fullName);
 				break;
 
 			case STRING:
@@ -189,20 +190,16 @@ public class JavaTemplateProcessor extends TemplateProcessor {
 
 		}
 
-		addEvtInstruction(mainInstructions, Constant.END_FLAG.name());
+		addEvtInstruction(instructions, Constant.END_FLAG.name());
+
+		instructions.add("bufferWritePointer = i;");
+		instructions.add("");
 
 		method.put("modifiers", new String[] {"protected"});
 		method.put("returnType", "void");
 		method.put("name", methodName);
 		method.put("args", args);
-
-		final ArrayList<String> instructions = new ArrayList<String>();
 		method.put("instructions", instructions);
-
-		instructions.add("");
-		instructions.addAll(mainInstructions);
-		instructions.add("bufferWritePointer = i;");
-		instructions.add("");
 
 		return method;
 
