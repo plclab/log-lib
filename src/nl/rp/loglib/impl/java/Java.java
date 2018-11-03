@@ -15,7 +15,6 @@ import nl.rp.loglib.Key;
 import nl.rp.loglib.Variable;
 import nl.rp.loglib.impl.LogLibImpl;
 import nl.rp.loglib.impl.TemplateData;
-import nl.rp.loglib.impl.TemplateProcessor;
 
 public class Java extends LogLibImpl {
 	
@@ -68,7 +67,7 @@ public class Java extends LogLibImpl {
 			Key[] keys;
 			for (Constant constant : Constant.CORE_EVENTS) {
 
-				keys = TemplateProcessor.stringToKeys(constant.name());
+				keys = Key.stringToKeys(constant.name());
 				if (keys != null && keys.length > 0 && keys[0] != null) {
 
 					System.out.println(constant.name() + ", " + constant.getValue());

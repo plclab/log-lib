@@ -82,7 +82,7 @@ public class JavaTemplateProcessor extends TemplateProcessor {
 		instructions.add("");
 		addEvtInstruction(instructions, Constant.START_FLAG.name());
 		addEvtInstruction(instructions, "magicByte");
-		addEvtInstruction(instructions, keysToString(keys));
+		addEvtInstruction(instructions, Key.keysToString(keys));
 
 		for (Key key : keys) {
 

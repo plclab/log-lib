@@ -158,7 +158,7 @@ public class StructuredTextTemplateProcessor extends TemplateProcessor {
 		final ArrayList<String> mainInstructions = new ArrayList<String>();	
 		addEvtP1Instruction(mainInstructions, Constant.START_FLAG.name());
 		addEvtP1Instruction(mainInstructions, "Handle.MagicByte");
-		addEvtP1Instruction(mainInstructions, keysToString(keys));
+		addEvtP1Instruction(mainInstructions, Key.keysToString(keys));
 
 		boolean createP2Var = false;
 
