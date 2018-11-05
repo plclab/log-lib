@@ -23,23 +23,21 @@ public enum Key {
 	INT64("Int64", "Value", DataType.INT64),
 	UINT64("UInt64", "Value", DataType.UINT64),
 	REAL64("Real64", "Value", DataType.REAL64),
-	
+
 	//TODO: These keys need to be handled differently..
 	STRING("String", "Value", DataType.UINT32),
 	BYTES("Bytes", "Value", DataType.UINT32);
-	
-	
+
 	public final String shortName;
 	public final String fullName;
 	public final DataType dataType;
-	
-	
+
 	Key(String shortName, String fullName, DataType dataType) {
 		this.shortName = shortName;
 		this.fullName = fullName;
 		this.dataType = dataType;
 	}
-	
+
 	public static Key[] stringToKeys(String keysString) {
 
 		final String[] keyStrings = keysString.split("_");
@@ -69,5 +67,55 @@ public enum Key {
 		return keyString;
 
 	}
-	
+
+	public static int getDataLength(Key[] keys) {
+
+		int length = 0;
+
+		for (Key key : keys) {
+
+			switch (key) {
+
+			case GR8: 
+			case ID8:
+			case CH8:
+			case BOOL8:
+			case INT8:
+			case UINT8:
+				length += 1;
+				break;
+
+			case GR16: 
+			case ID16:
+			case CH16:
+			case INT16:
+			case UINT16:
+				length += 2;
+				break;
+
+			case TICK32:
+			case INT32:
+			case UINT32:
+			case REAL32:
+				length += 4;
+				break;
+
+			case TICK64:
+			case INT64:
+			case UINT64:
+			case REAL64:
+				length += 8;
+				break;
+
+			default:
+				break;
+				
+			}
+
+		}
+
+		return length;
+
+	}
+
 }

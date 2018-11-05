@@ -11,7 +11,6 @@ import java.util.Map;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import nl.rp.loglib.Constant;
-import nl.rp.loglib.Key;
 import nl.rp.loglib.Variable;
 import nl.rp.loglib.impl.LogLibImpl;
 import nl.rp.loglib.impl.TemplateData;
@@ -66,39 +65,22 @@ public class Java extends LogLibImpl {
 			//Create begin method
 			methods.add(templateFactory.getBeginMethod());
 
-			//Create next method
-			methods.add(templateFactory.getNextMethod());
+			//Create nextA method (next without overflow check)
+			methods.add(templateFactory.getNextBMethod());
+
+			//Create nextB method (next with overflow check)
+			methods.add(templateFactory.getNextAMethod());
 
 			//Create end method
 			methods.add(templateFactory.getEndMethod());
 
 			//Create Evt methods
-			Key[] keys;
 			Map<String, Object> method;
 			for (Constant constant : Constant.CORE_EVENTS) {
-
-				keys = Key.stringToKeys(constant.name());
-				if (keys != null && keys.length > 0 && keys[0] != null) {
-
-					System.out.println(constant.name() + ", " + constant.getValue());
-
-					switch (keys[0]) {
-
-					case EVT:
-						
-						method = templateFactory.getEvtMethod(keys);
-						if (method != null) {
-							methods.add(method);							
-						}
-						
-						break;
-
-					default:
-						break;
-					}
-
+				method = templateFactory.getEvtMethod(constant.name());
+				if (method != null) {
+					methods.add(method);							
 				}
-
 			}
 			
 			//Process the template and write to output directory

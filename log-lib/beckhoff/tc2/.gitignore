@@ -1,0 +1,8 @@
+/temp/
+*.DFR
+*.ci
+*.ri
+*.BAK
+*.SDB
+*.SYM
+*.tpy

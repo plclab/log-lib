@@ -8,7 +8,6 @@ import java.io.Writer;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import nl.rp.loglib.Constant;
-import nl.rp.loglib.Key;
 import nl.rp.loglib.impl.LogLibImpl;
 import nl.rp.loglib.impl.TemplateData;
 import nl.rp.loglib.impl.codesys.StructuredTextTemplateFactory;
@@ -54,30 +53,9 @@ public class CoDeSysV3 extends LogLibImpl {
 			processTemplate(template, templateData);			
 			
 			//Create Evt functions
-			Key[] keys;
 			for (Constant constant : Constant.CORE_EVENTS) {
-
-				templateData = null;
-
-				keys = Key.stringToKeys(constant.name());
-				if (keys != null && keys.length > 0 && keys[0] != null) {
-
-					System.out.println(constant.name() + ", " + constant.getValue());
-
-					switch (keys[0]) {
-
-					case EVT:
-						templateData = templateFactory.getEvtFunctionTemplateData(keys);
-						break;
-
-					default:
-						break;
-					}
-
-				}
-
+				templateData = templateFactory.getEvtFunctionTemplateData(constant.name());
 				processTemplate(template, templateData);
-
 			}
 
 		} catch (Exception e) {
