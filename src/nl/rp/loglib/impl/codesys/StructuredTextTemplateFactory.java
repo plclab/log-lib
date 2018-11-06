@@ -122,10 +122,11 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		instructions.add("");
 		instructions.add("byteOrderInt := 1;");
 		instructions.add("pInt := ADR(byteOrderArray[0]);");
+		instructions.add("pInt^ := byteOrderInt;");
 		instructions.add("IF byteOrderArray[0] = 1 THEN");
-		instructions.add(SPC4 + "Handle.MagicByte := " + Constant.MAGIC_BYTE_V1_BIG_ENDIAN.name() + ";");
-		instructions.add("ELSE");
 		instructions.add(SPC4 + "Handle.MagicByte := " + Constant.MAGIC_BYTE_V1_LITTLE_ENDIAN.name() + ";");
+		instructions.add("ELSE");
+		instructions.add(SPC4 + "Handle.MagicByte := " + Constant.MAGIC_BYTE_V1_BIG_ENDIAN.name() + ";");
 		instructions.add("END_IF");
 		instructions.add("");
 

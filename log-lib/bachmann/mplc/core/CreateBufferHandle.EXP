@@ -24,10 +24,11 @@ Handle.BufferEndAddress := BufferAddress + (BufferSize - 1);
 
 byteOrderInt := 1;
 pInt := ADR(byteOrderArray[0]);
+pInt^ := byteOrderInt;
 IF byteOrderArray[0] = 1 THEN
-    Handle.MagicByte := MAGIC_BYTE_V1_BIG_ENDIAN;
-ELSE
     Handle.MagicByte := MAGIC_BYTE_V1_LITTLE_ENDIAN;
+ELSE
+    Handle.MagicByte := MAGIC_BYTE_V1_BIG_ENDIAN;
 END_IF
 
 END_FUNCTION

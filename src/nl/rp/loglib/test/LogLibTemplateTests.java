@@ -1,6 +1,8 @@
 package nl.rp.loglib.test;
 
 import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
@@ -60,6 +62,8 @@ public class LogLibTemplateTests {
 			logLibImpl = new BachmannMPlc();
 			logLibImpl.generate(configuration);
 
+			printByteOrders();
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -99,6 +103,22 @@ public class LogLibTemplateTests {
 		new File("log-lib/java/basic").mkdirs();
 		new File("log-lib/java/comm/tcp").mkdirs();
 		new File("log-lib/java/core").mkdirs();
+
+	}
+	
+	private void printByteOrders() {
+		
+		ByteBuffer byteBuffer = ByteBuffer.allocate(2);
+		byteBuffer.order(ByteOrder.BIG_ENDIAN);
+		byteBuffer.putShort((short)1);
+		byte[] bytes = byteBuffer.array();
+		System.out.println("Big endian: [" + bytes[0] + ", " + bytes[1] + "]");
+
+		byteBuffer = ByteBuffer.allocate(2);
+		byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+		byteBuffer.putShort((short)1);
+		bytes = byteBuffer.array();
+		System.out.println("Little endian: [" + bytes[0] + ", " + bytes[1] + "]");
 
 	}
 
