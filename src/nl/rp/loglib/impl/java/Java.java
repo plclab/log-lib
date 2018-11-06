@@ -41,7 +41,7 @@ public class Java extends LogLibImpl {
 
 			final TemplateData templateData = new TemplateData();
 			templateData.setOutputFileName(OUTPUT_BASE_DIR + "/" + getOutputDirectory() +
-					"/core/" + "LogBuffer" + OUTPUT_FILE_EXTENSION);
+					"/" + LIB_CORE_DIR + "/" + "LogBuffer" + OUTPUT_FILE_EXTENSION);
 
 			final Map<String, Object> classNode = new HashMap<>();
 			templateData.addNode("class", classNode);

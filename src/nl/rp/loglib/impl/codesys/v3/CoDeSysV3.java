@@ -39,23 +39,23 @@ public class CoDeSysV3 extends LogLibImpl {
 
 			//Create global constants
 			template = configuration.getTemplate(TEMPLATE_DIR + "/GlobalVariableList.ftlx");
-			templateData = templateFactory.getGlobalConstantsTemplateData();
-			processTemplate(template, templateData);
+			templateData = templateFactory.getCoreConstantsTemplateData();
+			processTemplate(template, templateData, LIB_CORE_DIR);
 
 			//Create LogBufferHandle struct
 			template = configuration.getTemplate(TEMPLATE_DIR + "/Struct.ftlx"); //TODO
 			templateData = templateFactory.getLogBufferHandleStructTemplateData();
-			processTemplate(template, templateData);			
+			processTemplate(template, templateData, LIB_CORE_DIR);			
 
 			//Create CreateBufferHandle function
 			template = configuration.getTemplate(TEMPLATE_DIR + "/Function.ftl");
 			templateData = templateFactory.getCreateBufferHandleFunctionTemplateData();
-			processTemplate(template, templateData);			
+			processTemplate(template, templateData, LIB_CORE_DIR);			
 			
 			//Create Evt functions
 			for (Constant constant : Constant.CORE_EVENTS) {
 				templateData = templateFactory.getEvtFunctionTemplateData(constant.name());
-				processTemplate(template, templateData);
+				processTemplate(template, templateData, LIB_CORE_DIR);
 			}
 
 		} catch (Exception e) {
@@ -64,14 +64,14 @@ public class CoDeSysV3 extends LogLibImpl {
 
 	}
 
-	private void processTemplate(Template template, TemplateData templateData) {
+	private void processTemplate(Template template, TemplateData templateData, String libraryDir) {
 
 		if (template != null && templateData != null) {
 
 			try {
 
-				final String outputFile = OUTPUT_BASE_DIR + "/" + getOutputDirectory() +
-						"/core/" + templateData.getOutputFileName() + OUTPUT_FILE_EXTENSION;
+				final String outputFile = OUTPUT_BASE_DIR + "/" + getOutputDirectory() + "/" +
+						libraryDir + "/" + templateData.getOutputFileName() + OUTPUT_FILE_EXTENSION;
 
 				final Writer out = new OutputStreamWriter(
 						new FileOutputStream(new File(outputFile)));

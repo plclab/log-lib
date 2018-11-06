@@ -39,24 +39,41 @@ public class CoDeSysV2 extends LogLibImpl {
 
 			//Create global constants
 			template = configuration.getTemplate(TEMPLATE_DIR + "/GlobalVariableList.ftl");
-			templateData = templateFactory.getGlobalConstantsTemplateData();
-			processTemplate(template, templateData);
+			templateData = templateFactory.getCoreConstantsTemplateData();
+			processTemplate(template, templateData, LIB_CORE_DIR);
 
 			//Create LogBufferHandle struct
 			template = configuration.getTemplate(TEMPLATE_DIR + "/Struct.ftl");
 			templateData = templateFactory.getLogBufferHandleStructTemplateData();
-			processTemplate(template, templateData);			
+			processTemplate(template, templateData, LIB_CORE_DIR);			
 
 			//Create CreateBufferHandle function
 			template = configuration.getTemplate(TEMPLATE_DIR + "/Function.ftl");
 			templateData = templateFactory.getCreateBufferHandleFunctionTemplateData();
-			processTemplate(template, templateData);			
-			
+			processTemplate(template, templateData, LIB_CORE_DIR);			
+
 			//Create Evt functions
 			for (Constant constant : Constant.CORE_EVENTS) {
 				templateData = templateFactory.getEvtFunctionTemplateData(constant.name());
-				processTemplate(template, templateData);
+				processTemplate(template, templateData, LIB_CORE_DIR);
 			}
+
+			//Create global variables
+			template = configuration.getTemplate(TEMPLATE_DIR + "/GlobalVariableList.ftl");
+			templateData = templateFactory.getBasicGlobalsTemplateData();
+			processTemplate(template, templateData, LIB_BASIC_DIR);
+
+			//Create log-lib-basic functions
+			template = configuration.getTemplate(TEMPLATE_DIR + "/Function.ftl");
+
+			processTemplate(template, templateFactory.getCreateGlobalBufferHandleFunctionTemplateData(), LIB_BASIC_DIR);			
+			processTemplate(template, templateFactory.getLogBoolFunctionTemplateData(), LIB_BASIC_DIR);			
+			processTemplate(template, templateFactory.getLogDintFunctionTemplateData(), LIB_BASIC_DIR);			
+			processTemplate(template, templateFactory.getLogRealFunctionTemplateData(), LIB_BASIC_DIR);			
+			processTemplate(template, templateFactory.getMonitorBoolFunctionTemplateData(), LIB_BASIC_DIR);			
+			processTemplate(template, templateFactory.getMonitorDintFunctionTemplateData(), LIB_BASIC_DIR);			
+			processTemplate(template, templateFactory.getMonitorRealFunctionTemplateData(), LIB_BASIC_DIR);			
+
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -64,14 +81,14 @@ public class CoDeSysV2 extends LogLibImpl {
 
 	}
 
-	private void processTemplate(Template template, TemplateData templateData) {
+	private void processTemplate(Template template, TemplateData templateData, String libraryDir) {
 
 		if (template != null && templateData != null) {
 
 			try {
 
-				final String outputFile = OUTPUT_BASE_DIR + "/" + getOutputDirectory() +
-						"/core/" + templateData.getOutputFileName() + OUTPUT_FILE_EXTENSION;
+				final String outputFile = OUTPUT_BASE_DIR + "/" + getOutputDirectory() + "/" +
+						libraryDir + "/" + templateData.getOutputFileName() + OUTPUT_FILE_EXTENSION;
 
 				final Writer out = new OutputStreamWriter(
 						new FileOutputStream(new File(outputFile)));

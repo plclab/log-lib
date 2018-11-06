@@ -2,6 +2,7 @@ package nl.rp.loglib.impl.java;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import nl.rp.loglib.Constant;
@@ -40,11 +41,11 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 	}
 
-	public ArrayList<Variable> getConstants() {
-
-		final ArrayList<Variable> vars = new ArrayList<Variable>();
+	public List<Variable> getConstants() {
 
 		final String[] modifiers = new String[] {"public", "static", "final"};
+
+		final List<Variable> vars = new ArrayList<Variable>();
 		for (Constant constant : Constant.values()) {
 			vars.add(new Variable(constant.name(), "byte", "" + (byte)constant.getValue(), modifiers));
 		}
@@ -53,12 +54,11 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 	}
 
-	public ArrayList<Variable> getMembers() {
-
-		final ArrayList<Variable> vars = new ArrayList<Variable>();
+	public List<Variable> getMembers() {
 
 		final String[] modifiers = new String[] {"private"};
 
+		final List<Variable> vars = new ArrayList<Variable>();
 		vars.add(new Variable("buffer", "byte[]", "new byte[4000]", modifiers));
 		vars.add(new Variable("bufferWritePointer", "int", "0", modifiers));
 		vars.add(new Variable("bufferReadPointer", "int", "0", modifiers));
@@ -72,13 +72,12 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 	public Map<String, Object> getBeginMethod() {
 
-		final Map<String, Object> method = new HashMap<>();
-
-		final ArrayList<String> instructions = new ArrayList<String>();	
+		final List<String> instructions = new ArrayList<String>();	
 		instructions.add("i = bufferWritePointer;");
 		addNextInstruction(instructions, Constant.START_FLAG.name(), true);
 		addNextInstruction(instructions, "magicByte", true);
 
+		final Map<String, Object> method = new HashMap<>();
 		method.put("modifiers", new String[] {"private"});
 		method.put("returnType", "void");
 		method.put("name", "begin");
@@ -90,12 +89,11 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 	public Map<String, Object> getNextAMethod() {
 
-		final Map<String, Object> method = new HashMap<>();
-
-		final ArrayList<String> instructions = new ArrayList<String>();
+		final List<String> instructions = new ArrayList<String>();
 		instructions.add("i += 1;");
 		instructions.add("buffer[i] = value;");
 
+		final Map<String, Object> method = new HashMap<>();
 		method.put("modifiers", new String[] {"private"});
 		method.put("returnType", "void");
 		method.put("name", "nextA");
@@ -108,9 +106,7 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 	public Map<String, Object> getNextBMethod() {
 
-		final Map<String, Object> method = new HashMap<>();
-
-		final ArrayList<String> instructions = new ArrayList<String>();
+		final List<String> instructions = new ArrayList<String>();
 		instructions.add("if (i == last) {");
 		instructions.add("    i = 0;");
 		instructions.add("} else {");
@@ -118,6 +114,7 @@ public class JavaTemplateFactory extends TemplateFactory {
 		instructions.add("}");
 		instructions.add("buffer[i] = value;");
 
+		final Map<String, Object> method = new HashMap<>();
 		method.put("modifiers", new String[] {"private"});
 		method.put("returnType", "void");
 		method.put("name", "nextB");
@@ -130,12 +127,11 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 	public Map<String, Object> getEndMethod() {
 
-		final Map<String, Object> method = new HashMap<>();
-
-		final ArrayList<String> instructions = new ArrayList<String>();	
+		final List<String> instructions = new ArrayList<String>();	
 		addNextInstruction(instructions, Constant.END_FLAG.name(), true);
 		instructions.add("bufferWritePointer = i;");
 
+		final Map<String, Object> method = new HashMap<>();
 		method.put("modifiers", new String[] {"private"});
 		method.put("returnType", "void");
 		method.put("name", "end");
@@ -147,15 +143,13 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 	public Map<String, Object> getEvtMethod(String evtConstant) {
 
-		final Key[] keys = Key.stringToKeys(evtConstant);
-
-		final Map<String, Object> method = new HashMap<>();
-
 		String methodName = "";
 
-		final ArrayList<Variable> args = new ArrayList<Variable>();	
+		final Key[] keys = Key.stringToKeys(evtConstant);
 
-		final ArrayList<String> instructions = new ArrayList<String>();	
+		final List<Variable> args = new ArrayList<Variable>();	
+
+		final List<String> instructions = new ArrayList<String>();	
 		instructions.add("begin();");
 		addNextInstruction(instructions, evtConstant, true);
 
@@ -279,6 +273,7 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 		instructions.add("end();");
 
+		final Map<String, Object> method = new HashMap<>();
 		method.put("modifiers", new String[] {"protected"});
 		method.put("returnType", "void");
 		method.put("name", methodName);
@@ -289,11 +284,11 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 	}
 
-	private void addNextInstruction(ArrayList<String> instructions, String value, boolean withOverflow) {
+	private void addNextInstruction(List<String> instructions, String value, boolean withOverflow) {
 		instructions.add("next" + (withOverflow? "B":"A") + "(" + value + ");");
 	}
 
-	private void addNextInstruction(ArrayList<String> instructions, String value, boolean withOverflow, int byteIndex) {
+	private void addNextInstruction(List<String> instructions, String value, boolean withOverflow, int byteIndex) {
 		if (byteIndex > 0) {
 			instructions.add("next" + (withOverflow? "B":"A") + "((byte)((" + value + " >> " + (byteIndex * 8) + ") & 0xff));");
 		} else {
