@@ -34,7 +34,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		case REAL32: return "REAL";
 		case INT64: return null; //Not supported
 		case UINT64: return null; //Not supported
-		case REAL64: return "LREAL"; //Not supported
+		case REAL64: return "LREAL";
 
 		default: return null;
 
@@ -560,10 +560,10 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 	private TemplateData createFunction(String name, String path,
 			List<Variable> inputVars, List<Variable> inOutVars,
 			List<Variable> vars, List<String> instructions) {
-		return createFunction(name, path, null, inputVars, inOutVars, vars, instructions);
+		return createFunction(name, new String[] {path}, null, inputVars, inOutVars, vars, instructions);
 	}
 
-	private TemplateData createFunction(String name, String path, DataType returnType,
+	private TemplateData createFunction(String name, String[] path, DataType returnType,
 			List<Variable> inputVars, List<Variable> inOutVars,
 			List<Variable> vars, List<String> instructions) {
 
@@ -573,8 +573,8 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		final Map<String, Object> pouNode = new HashMap<>();
 		templateData.addNode("pou", pouNode);
 		pouNode.put("name", name);
-		if (path != null) {			
-			pouNode.put("path", new String[] {"basic"});
+		if (path != null) {
+			pouNode.put("path", path);
 		}
 
 		final Map<String, Object> interfaceNode = new HashMap<>();
