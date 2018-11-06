@@ -1,0 +1,15 @@
+
+(* @NESTEDCOMMENTS := 'No' *)
+(* @PATH := '\/basic' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION CreateGlobalBufferHandle : BOOL
+VAR_INPUT
+    BufferAddress: DWORD;
+    BufferSize: DINT;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+CreateBufferHandle(BufferAddress, BufferSize, GlobalLogBufferHandle);
+END_FUNCTION

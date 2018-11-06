@@ -5,8 +5,9 @@ import java.io.File;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import nl.rp.loglib.impl.LogLibImpl;
+import nl.rp.loglib.impl.bachmann.mplc.BachmannMPlc;
 import nl.rp.loglib.impl.beckhoff.tc2.BeckhoffTc2;
-import nl.rp.loglib.impl.java.Java;
+import nl.rp.loglib.impl.codesys.v2.CoDeSysV2;
 
 public class LogLibTemplateTests {
 
@@ -43,20 +44,20 @@ public class LogLibTemplateTests {
 			LogLibImpl logLibImpl;
 
 			/*
-			logLibImpl = new CoDeSysV2();
-			logLibImpl.generate(configuration);
-
 			logLibImpl = new CoDeSysV3();
 			logLibImpl.generate(configuration);
 
-			logLibImpl = new BachmannMPlc();
+			logLibImpl = new Java();
 			logLibImpl.generate(configuration);
 			*/
+
+			logLibImpl = new CoDeSysV2();
+			logLibImpl.generate(configuration);
 
 			logLibImpl = new BeckhoffTc2();
 			logLibImpl.generate(configuration);
 
-			logLibImpl = new Java();
+			logLibImpl = new BachmannMPlc();
 			logLibImpl.generate(configuration);
 
 		} catch (Exception e) {

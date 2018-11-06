@@ -1,0 +1,19 @@
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @GLOBAL_VARIABLE_LIST := 'LogLibBasic' *)
+(* @PATH := '' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+VAR_GLOBAL
+
+    GlobalLogBufferHandle: LogBufferHandle;
+    GlobalTick: UDINT;
+
+END_VAR
+
+(* @OBJECT_END := 'LogLibBasic' *)
+(* @CONNECTIONS := LogLibBasic
+FILENAME : ''
+FILETIME : 0
+EXPORT : 0
+NUMOFCONNECTIONS : 0
+*)

@@ -1,0 +1,33 @@
+
+(* @NESTEDCOMMENTS := 'No' *)
+(* @PATH := '\/core' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION CreateBufferHandle : BOOL
+VAR_INPUT
+    BufferAddress: DWORD;
+    BufferSize: DINT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    byteOrderInt: INT;
+    byteOrderArray: ARRAY[0..1] OF BYTE;
+    pInt: POINTER TO INT;
+END_VAR
+(* @END_DECLARATION := '0' *)
+
+Handle.BufferAddress := BufferAddress;
+Handle.BufferSize := BufferSize;
+Handle.BufferEndAddress := BufferAddress + (BufferSize - 1);
+
+byteOrderInt := 1;
+pInt := ADR(byteOrderArray[0]);
+IF byteOrderArray[0] = 1 THEN
+    Handle.MagicByte := MAGIC_BYTE_V1_BIG_ENDIAN;
+ELSE
+    Handle.MagicByte := MAGIC_BYTE_V1_LITTLE_ENDIAN;
+END_IF
+
+END_FUNCTION

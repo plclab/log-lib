@@ -1,0 +1,19 @@
+
+(* @NESTEDCOMMENTS := 'No' *)
+(* @PATH := '\/basic' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION LogDint : BOOL
+VAR_INPUT
+    Value: DINT;
+    Channel: UINT;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+IF Channel < 256 THEN
+    EvtCh8Tick32Int32(UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);
+ELSE
+    EvtCh16Tick32Int32(Channel, GlobalTick, Value, GlobalLogBufferHandle);
+END_IF
+END_FUNCTION

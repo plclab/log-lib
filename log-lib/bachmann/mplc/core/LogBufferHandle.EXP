@@ -1,0 +1,15 @@
+(* @NESTEDCOMMENTS := 'No' *)
+(* @PATH := '\/core' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE LogBufferHandle :
+STRUCT
+    BufferAddress: DWORD;
+    BufferSize: UDINT;
+    BufferEndAddress: DWORD;
+    BufferWritePointer: DINT;
+    BufferReadPointer: DINT;
+    MagicByte: BYTE := MAGIC_BYTE_V1_LITTLE_ENDIAN;
+END_STRUCT
+END_TYPE
+
+(* @END_DECLARATION := '0' *)
