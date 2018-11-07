@@ -54,7 +54,7 @@ public class CoDeSysV2 extends LogLibImpl {
 
 			//Create Evt functions
 			for (Constant constant : Constant.CORE_EVENTS) {
-				templateData = templateFactory.getEvtFunctionTemplateData(constant.name());
+				templateData = templateFactory.getEvtFunctionTemplateData(constant);
 				processTemplate(template, templateData, LIB_CORE_DIR);
 			}
 

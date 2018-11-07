@@ -267,11 +267,11 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 
 	}
 
-	public TemplateData getEvtFunctionTemplateData(String evtConstant) {
+	public TemplateData getEvtFunctionTemplateData(Constant evtConstant) {
 
 		String functionName = "";
 
-		final Key[] keys = Key.stringToKeys(evtConstant);
+		final Key[] keys = Key.stringToKeys(evtConstant.name());
 		final int length = Key.getDataLength(keys) + 4;
 
 		final List<Variable> inputVars = new ArrayList<>();	
@@ -281,7 +281,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 
 		addEvtP1Instruction(instructions1, instructions2, Constant.START_FLAG.name());
 		addEvtP1Instruction(instructions1, instructions2, "Handle.MagicByte");
-		addEvtP1Instruction(instructions1, instructions2, evtConstant);
+		addEvtP1Instruction(instructions1, instructions2, evtConstant.name());
 
 		boolean createP2Var = false;
 		DataType p3DataType = null;

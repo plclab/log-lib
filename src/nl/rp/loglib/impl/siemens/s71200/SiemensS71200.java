@@ -7,6 +7,7 @@ import java.io.Writer;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
+import nl.rp.loglib.Constant;
 import nl.rp.loglib.impl.LogLibImpl;
 import nl.rp.loglib.impl.TemplateData;
 import nl.rp.loglib.impl.siemens.SclTemplateFactory;
@@ -77,6 +78,11 @@ public class SiemensS71200 extends LogLibImpl {
 			templateData = templateFactory.getCreateBufferHandleFunctionTemplateData();
 			template.process(templateData.getModel(), logLibCoreOutputWriter);
 			
+			//Create Evt functions
+			for (Constant constant : Constant.CORE_EVENTS) {
+				templateData = templateFactory.getEvtFunctionTemplateData(constant);
+				template.process(templateData.getModel(), logLibCoreOutputWriter);
+			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
