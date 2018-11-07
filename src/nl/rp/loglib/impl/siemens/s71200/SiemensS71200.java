@@ -77,7 +77,11 @@ public class SiemensS71200 extends LogLibImpl {
 			template = configuration.getTemplate(TEMPLATE_DIR + "/scl/Function.ftl");
 			templateData = templateFactory.getCreateBufferHandleFunctionTemplateData();
 			template.process(templateData.getModel(), logLibCoreOutputWriter);
-			
+
+			//Create GetNextWritePointer function
+			templateData = templateFactory.getGetNextWritePointerFunctionTemplateData();
+			template.process(templateData.getModel(), logLibCoreOutputWriter);
+
 			//Create Evt functions
 			for (Constant constant : Constant.CORE_EVENTS) {
 				templateData = templateFactory.getEvtFunctionTemplateData(constant);

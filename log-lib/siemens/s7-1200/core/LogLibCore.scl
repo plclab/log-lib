@@ -27,6 +27,49 @@ BEGIN
 	END_IF;
 END_FUNCTION
 
+FUNCTION "GetNextWritePointer" : Dint
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Length : DInt;
+   END_VAR
+
+   VAR_IN_OUT
+      Handle : "LogBuffer";
+   END_VAR
+   
+   VAR_TEMP 
+      i : DInt;
+   END_VAR
+
+
+BEGIN
+	#i := -1;
+	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
+	    IF #Handle.BufferWritePointer + #Length >= #Handle.BufferEnd THEN
+	        IF #Handle.BufferReadPointer >= #Length THEN
+	            #Handle.BufferOverflow := #Handle.BufferWritePointer;
+	            #Handle.Buffer[0] := 121;
+	            #Handle.Buffer[1] := #Handle.MagicByte;
+	            #i := 2;
+	        END_IF;
+	    ELSIF #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) >= #Length THEN
+	        #i := #Handle.BufferWritePointer + 1;
+	        #Handle.Buffer[#i] := 121;
+	        #i := #i + 1;
+	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	        #i := #i + 1;
+	    END_IF;
+	ELSIF #Handle.BufferReadPointer - #Handle.BufferWritePointer >= #Length THEN
+	    #i := #Handle.BufferWritePointer + 1;
+	    #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	END_IF;
+	#GetNextWritePointer := #i;
+END_FUNCTION
+
 FUNCTION "EvtNull" : Void
 { S7_Optimized_Access := 'FALSE' }
 VERSION : 0.1
@@ -35,53 +78,18 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
    END_VAR
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 4;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 4;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 4, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 0;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
-	
-	    IF #i + 4 < #end THEN
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 0;
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 0;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -100,8 +108,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -109,72 +115,27 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 8;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 8;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 8, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 19;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p3 := #Tick;
 	
-	    IF #i + 8 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 19;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 19;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -194,8 +155,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -203,66 +162,24 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 7;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 7;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 7, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 16;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 7 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 16;
-	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 16;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -282,8 +199,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -291,66 +206,24 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 7;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 7;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 7, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 18;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 7 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 18;
-	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Value;
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 18;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Value;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -370,8 +243,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -381,74 +252,29 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 8;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 8;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 8, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 28;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 8 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 28;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 28;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -468,8 +294,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -477,74 +301,29 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 8;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 8;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 8, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 29;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 8 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p2 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 29;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p2 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 29;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p2 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -564,8 +343,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -575,86 +352,35 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 10;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 10;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 10, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 48;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 10 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 48;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 48;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -674,8 +400,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -685,86 +409,35 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 10;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 10;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 10, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 49;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 10 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 49;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 49;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -784,8 +457,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -795,86 +466,35 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 10;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 10;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 10, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 50;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 10 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 50;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 50;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -894,8 +514,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -905,110 +523,47 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 14;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 14;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 14, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 110;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 14 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 110;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[4];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[5];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[6];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[4];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[7];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[5];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[6];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[7];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 110;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[4];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[5];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[6];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[7];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -1029,8 +584,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -1038,84 +591,33 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 10;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 10;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 10, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 51;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	    IF #i + 10 < #end THEN
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 51;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 51;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -1136,8 +638,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -1145,84 +645,33 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 10;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 10;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 10, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 53;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	    IF #i + 10 < #end THEN
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 53;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Value;
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 53;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Value;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -1243,8 +692,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -1254,92 +701,38 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 11;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 11;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 11, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 65;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	    IF #i + 11 < #end THEN
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 65;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 65;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -1360,8 +753,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -1371,92 +762,38 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 11;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 11;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 11, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 66;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	    IF #i + 11 < #end THEN
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 66;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #p2 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p2 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 66;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p2 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -1477,8 +814,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -1488,104 +823,44 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 13;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 13;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 13, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 93;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	    IF #i + 13 < #end THEN
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 93;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 93;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -1606,8 +881,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -1617,104 +890,44 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 13;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 13;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 13, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 94;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	    IF #i + 13 < #end THEN
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 94;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 94;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -1735,8 +948,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -1746,104 +957,44 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 13;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 13;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 13, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 95;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	    IF #i + 13 < #end THEN
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 95;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 95;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -1864,8 +1015,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -1875,128 +1024,56 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 17;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 17;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 17, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 163;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	    IF #i + 17 < #end THEN
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 163;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[4];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[5];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[6];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[4];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[7];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[5];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[6];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[7];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 163;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[4];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[5];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[6];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[7];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -2017,8 +1094,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -2028,92 +1103,38 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 11;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 11;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 11, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 70;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 11 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 70;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 70;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -2134,8 +1155,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -2145,92 +1164,38 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 11;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 11;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 11, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 72;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 11 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 72;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Value;
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 72;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Value;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -2251,8 +1216,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -2264,100 +1227,43 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 12;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 12;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 12, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 87;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 12 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 87;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 87;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -2378,8 +1284,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -2389,100 +1293,43 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 12;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 12;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 12, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 88;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 12 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 88;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #p2 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #p2 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 88;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p2 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -2503,8 +1350,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -2516,112 +1361,49 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 14;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 14;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 14, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 122;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 14 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 122;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 122;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -2642,8 +1424,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -2655,112 +1435,49 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 14;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 14;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 14, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 123;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 14 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -2781,8 +1498,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -2794,112 +1509,49 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 14;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 14;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 14, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 124;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 14 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 124;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 124;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -2920,8 +1572,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -2933,136 +1583,61 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 18;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 18;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 18, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 185;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #p2 := #Channel;
 	
-	    IF #i + 18 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 185;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[4];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[5];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[4];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[6];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[5];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[7];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[6];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[7];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 185;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[4];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[5];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[6];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[7];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -3085,8 +1660,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -3094,96 +1667,39 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 12;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 12;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 12, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 81;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 12 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 81;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 81;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -3206,8 +1722,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -3215,96 +1729,39 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 12;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 12;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 12, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 83;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 12 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 83;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Value;
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 83;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Value;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -3327,8 +1784,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -3338,104 +1793,44 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 13;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 13;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 13, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 96;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 13 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 96;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 96;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -3458,8 +1853,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -3469,104 +1862,44 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 13;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 13;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 13, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 97;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 13 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 97;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #p2 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p2 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 97;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p2 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -3589,8 +1922,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -3600,116 +1931,50 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 15;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 15;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 15, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 129;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 15 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 129;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 129;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -3732,8 +1997,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -3743,116 +2006,50 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 15;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 15;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 15, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 130;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 15 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 130;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 130;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -3875,8 +2072,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -3886,116 +2081,50 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 15;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 15;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 15, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 131;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 15 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 131;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 131;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -4018,8 +2147,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p3 : UDInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
@@ -4029,140 +2156,62 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 19;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 19;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 19, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 189;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 19 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 189;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Channel;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[4];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[5];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[6];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[4];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[7];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[5];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[6];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[7];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 189;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Channel;
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[4];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[5];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[6];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[7];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -4185,8 +2234,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -4196,104 +2243,44 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 13;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 13;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 13, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 100;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 13 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #p2 := #Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 100;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 100;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -4316,8 +2303,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -4327,104 +2312,44 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 13;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 13;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 13, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 102;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 13 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #p2 := #Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 102;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Value;
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 102;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Value;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -4447,8 +2372,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -4460,112 +2383,49 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 14;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 14;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 14, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 120;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 14 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #p2 := #Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 120;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 120;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -4588,8 +2448,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -4599,112 +2457,49 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 14;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 14;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 14, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 121;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 14 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #p2 := #Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #p2 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #p2 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p2 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -4727,8 +2522,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -4740,124 +2533,55 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 16;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 16;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 16, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 154;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 16 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #p2 := #Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 154;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 154;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -4880,8 +2604,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -4893,124 +2615,55 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 16;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 16;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 16, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 155;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 16 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #p2 := #Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 155;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 155;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -5033,8 +2686,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -5046,124 +2697,55 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 16;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 16;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 16, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 156;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 16 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #p2 := #Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 156;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 156;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -5186,8 +2768,6 @@ VERSION : 0.1
    END_VAR
    
    VAR_TEMP 
-      full : Bool;
-      end : DInt;
       i : DInt;
       p2 : UInt;
       p2Bytes AT p2 : Array[0..1] of Byte;
@@ -5199,148 +2779,67 @@ VERSION : 0.1
 
 
 BEGIN
-	IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN
-	    #full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < 20;
-	ELSE
-	    #full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < 20;
-	END_IF;
+	#i := "GetNextWritePointer"(Length := 20, Handle := #Handle);
+	IF #i >= 0 THEN
 	
-	IF NOT #full THEN
+	    #Handle.Buffer[#i] := 199;
 	
-	    #end := #Handle.BufferEnd;
-	    #i := #Handle.BufferWritePointer;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Group;
 	
-	    IF #i + 20 < #end THEN
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := Id;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 121;
+	    #p2 := #Channel;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 199;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p2Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #Group;
+	    #p3 := #Tick;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := Id;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[0];
 	
-	        #p2 := #Channel;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[1];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[2];
 	
-	        #p3 := #Tick;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p3Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
+	    #p4 := #Value;
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[0];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[1];
 	
-	        #p4 := #Value;
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[2];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[4];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[5];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[4];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[6];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[5];
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #p4Bytes[7];
 	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[6];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := #p4Bytes[7];
-	
-	        #i := #i + 1;
-	        #Handle.Buffer[#i] := 123;
-	
-	    ELSE
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 121;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 199;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #Group;
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := Id;
-	
-	        #p2 := #Channel;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p2Bytes[1];
-	
-	        #p3 := #Tick;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p3Bytes[3];
-	
-	        #p4 := #Value;
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[0];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[1];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[2];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[3];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[4];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[5];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[6];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := #p4Bytes[7];
-	
-	        IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;
-	        #Handle.Buffer[#i] := 123;
-	
-	    END_IF;
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 123;
 	
 	    #Handle.BufferWritePointer := #i;
 	

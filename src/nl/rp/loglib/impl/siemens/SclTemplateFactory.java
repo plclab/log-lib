@@ -52,6 +52,7 @@ public class SclTemplateFactory extends TemplateFactory {
 		vars.add(new Variable("BufferEnd", "DInt", "3999"));
 		vars.add(new Variable("BufferWritePointer", "DInt", "0"));
 		vars.add(new Variable("BufferReadPointer", "DInt", "0"));
+		vars.add(new Variable("BufferOverflow", "DInt", "-1"));
 		vars.add(new Variable("MagicByte", "Byte", "" + Constant.MAGIC_BYTE_V1_LITTLE_ENDIAN.getValue()));
 
 		final TemplateData templateData = new TemplateData();
@@ -71,9 +72,9 @@ public class SclTemplateFactory extends TemplateFactory {
 		final List<Variable> inOutVars = new ArrayList<>();	
 		inOutVars.add(new Variable("Handle", "\"LogBuffer\""));
 
-		final List<Variable> vars = new ArrayList<>();
-		vars.add(new Variable("byteOrderInt", "Int"));
-		vars.add(new Variable("byteOrderArray AT byteOrderInt", "Array[0..1] OF Byte"));
+		final List<Variable> tempVars = new ArrayList<>();
+		tempVars.add(new Variable("byteOrderInt", "Int"));
+		tempVars.add(new Variable("byteOrderArray AT byteOrderInt", "Array[0..1] OF Byte"));
 
 		final List<String> instructions = new ArrayList<>();
 		instructions.add("#Handle.BufferSize := #BufferSize;");
@@ -81,12 +82,53 @@ public class SclTemplateFactory extends TemplateFactory {
 		instructions.add("");
 		instructions.add("#byteOrderInt := 1;");
 		instructions.add("IF #byteOrderArray[0] = 1 THEN");
-		instructions.add(SPC4 + "#Handle.MagicByte := " + Constant.MAGIC_BYTE_V1_LITTLE_ENDIAN.getValue() + ";");
+		instructions.add(TAB + "#Handle.MagicByte := " + Constant.MAGIC_BYTE_V1_LITTLE_ENDIAN.getValue() + ";");
 		instructions.add("ELSE");
-		instructions.add(SPC4 + "#Handle.MagicByte := " + Constant.MAGIC_BYTE_V1_BIG_ENDIAN.getValue() + ";");
+		instructions.add(TAB + "#Handle.MagicByte := " + Constant.MAGIC_BYTE_V1_BIG_ENDIAN.getValue() + ";");
 		instructions.add("END_IF;");
 
-		return createFunction("CreateBufferHandle", inputVars, inOutVars, vars, instructions);
+		return createFunction("CreateBufferHandle", inputVars, inOutVars, tempVars, instructions);
+
+	}
+	
+	public TemplateData getGetNextWritePointerFunctionTemplateData() {
+
+		final List<Variable> inputVars = new ArrayList<>();	
+		inputVars.add(new Variable("Length", "DInt"));
+
+		final List<Variable> inOutVars = new ArrayList<>();	
+		inOutVars.add(new Variable("Handle", "\"LogBuffer\""));
+
+		final List<Variable> tempVars = new ArrayList<>();
+		tempVars.add(new Variable("i", "DInt"));
+
+		final List<String> instructions = new ArrayList<>();
+		instructions.add("#i := -1;");
+		instructions.add("IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN");
+		instructions.add(TAB + "IF #Handle.BufferWritePointer + #Length >= #Handle.BufferEnd THEN");
+		instructions.add(TABTAB + "IF #Handle.BufferReadPointer >= #Length THEN");
+		instructions.add(TABTABTAB + "#Handle.BufferOverflow := #Handle.BufferWritePointer;");
+		instructions.add(TABTABTAB + "#Handle.Buffer[0] := " + Constant.START_FLAG.getValue() + ";");
+		instructions.add(TABTABTAB + "#Handle.Buffer[1] := #Handle.MagicByte;");
+		instructions.add(TABTABTAB + "#i := 2;");
+		instructions.add(TABTAB + "END_IF;");
+		instructions.add(TAB + "ELSIF #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) >= #Length THEN");
+		instructions.add(TABTAB + "#i := #Handle.BufferWritePointer + 1;");
+		instructions.add(TABTAB + "#Handle.Buffer[#i] := " + Constant.START_FLAG.getValue() + ";");
+		instructions.add(TABTAB + "#i := #i + 1;");
+		instructions.add(TABTAB + "#Handle.Buffer[#i] := #Handle.MagicByte;");
+		instructions.add(TABTAB + "#i := #i + 1;");
+		instructions.add(TAB + "END_IF;");
+		instructions.add("ELSIF #Handle.BufferReadPointer - #Handle.BufferWritePointer >= #Length THEN");
+		instructions.add(TAB + "#i := #Handle.BufferWritePointer + 1;");
+		instructions.add(TAB + "#Handle.Buffer[#i] := " + Constant.START_FLAG.getValue() + ";");
+		instructions.add(TAB + "#i := #i + 1;");
+		instructions.add(TAB + "#Handle.Buffer[#i] := #Handle.MagicByte;");
+		instructions.add(TAB + "#i := #i + 1;");
+		instructions.add("END_IF;");
+		instructions.add("#GetNextWritePointer := #i;");
+
+		return createFunction("GetNextWritePointer", DataType.INT32, inputVars, inOutVars, tempVars, instructions);
 
 	}
 
@@ -99,13 +141,11 @@ public class SclTemplateFactory extends TemplateFactory {
 
 		final List<Variable> inputVars = new ArrayList<>();	
 
-		final List<String> instructions1 = new ArrayList<String>();	
-		final List<String> instructions2 = new ArrayList<String>();	
+		final List<String> evtInstructions = new ArrayList<String>();	
 
-		addEvtNextIndexInstruction(instructions1, instructions2, "" + Constant.START_FLAG.getValue());
-		addEvtNextIndexInstruction(instructions1, instructions2, "#Handle.MagicByte");
-		addEvtNextIndexInstruction(instructions1, instructions2, "" + evtConstant.getValue());
-
+		evtInstructions.add(TAB + "#Handle.Buffer[#i] := " +  evtConstant.getValue() + ";");
+		evtInstructions.add("");
+		
 		boolean createP2Var = false;
 		DataType p3DataType = null;
 		DataType p4DataType = null;
@@ -129,52 +169,52 @@ public class SclTemplateFactory extends TemplateFactory {
 			case GR8:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtNextIndexInstruction(instructions1, instructions2, "#" + key.fullName);
+				addEvtNextIndexInstruction(evtInstructions, "#" + key.fullName);
 				break;
 
 			case GR16:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtAssignPxInstruction(instructions1, instructions2, 2, "#" + key.fullName);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 2, 0);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 2, 1);
+				addEvtAssignPxInstruction(evtInstructions, 2, "#" + key.fullName);
+				addEvtNextIndexPxInstruction(evtInstructions, 2, 0);
+				addEvtNextIndexPxInstruction(evtInstructions, 2, 1);
 				createP2Var = true;
 				break;
 
 			case ID8:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtNextIndexInstruction(instructions1, instructions2, key.fullName);
+				addEvtNextIndexInstruction(evtInstructions, key.fullName);
 				break;
 
 			case ID16:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtAssignPxInstruction(instructions1, instructions2, 2, "#" + key.fullName);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 2, 0);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 2, 1);
+				addEvtAssignPxInstruction(evtInstructions, 2, "#" + key.fullName);
+				addEvtNextIndexPxInstruction(evtInstructions, 2, 0);
+				addEvtNextIndexPxInstruction(evtInstructions, 2, 1);
 				createP2Var = true;
 				break;
 
 			case CH8:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtNextIndexInstruction(instructions1, instructions2, key.fullName);
+				addEvtNextIndexInstruction(evtInstructions, key.fullName);
 				break;
 
 			case CH16:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtAssignPxInstruction(instructions1, instructions2, 2, "#" + key.fullName);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 2, 0);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 2, 1);
+				addEvtAssignPxInstruction(evtInstructions, 2, "#" + key.fullName);
+				addEvtNextIndexPxInstruction(evtInstructions, 2, 0);
+				addEvtNextIndexPxInstruction(evtInstructions, 2, 1);
 				createP2Var = true;
 				break;
 
 			case BOOL8:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtNextIndexInstruction(instructions1, instructions2, "BOOL_TO_BYTE(#" + key.fullName + ")");
+				addEvtNextIndexInstruction(evtInstructions, "BOOL_TO_BYTE(#" + key.fullName + ")");
 				break;
 
 			case INT8:
@@ -183,24 +223,24 @@ public class SclTemplateFactory extends TemplateFactory {
 			case UINT8:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtNextIndexInstruction(instructions1, instructions2, key.fullName);
+				addEvtNextIndexInstruction(evtInstructions, key.fullName);
 				break;
 
 			case INT16:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
 				p4DataType = key.dataType;
-				addEvtAssignPxInstruction(instructions1, instructions2, 4, "#" + key.fullName);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 4, 0);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 4, 1);
+				addEvtAssignPxInstruction(evtInstructions, 4, "#" + key.fullName);
+				addEvtNextIndexPxInstruction(evtInstructions, 4, 0);
+				addEvtNextIndexPxInstruction(evtInstructions, 4, 1);
 				break;
 
 			case UINT16:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtAssignPxInstruction(instructions1, instructions2, 2, "#" + key.fullName);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 2, 0);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 2, 1);
+				addEvtAssignPxInstruction(evtInstructions, 2, "#" + key.fullName);
+				addEvtNextIndexPxInstruction(evtInstructions, 2, 0);
+				addEvtNextIndexPxInstruction(evtInstructions, 2, 1);
 				createP2Var = true;
 				break;
 
@@ -208,11 +248,11 @@ public class SclTemplateFactory extends TemplateFactory {
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
 				p3DataType = key.dataType;
-				addEvtAssignPxInstruction(instructions1, instructions2, 3, "#" + key.fullName);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 3, 0);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 3, 1);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 3, 2);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 3, 3);
+				addEvtAssignPxInstruction(evtInstructions, 3, "#" + key.fullName);
+				addEvtNextIndexPxInstruction(evtInstructions, 3, 0);
+				addEvtNextIndexPxInstruction(evtInstructions, 3, 1);
+				addEvtNextIndexPxInstruction(evtInstructions, 3, 2);
+				addEvtNextIndexPxInstruction(evtInstructions, 3, 3);
 				break;
 
 			case INT32:
@@ -221,11 +261,11 @@ public class SclTemplateFactory extends TemplateFactory {
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
 				p4DataType = key.dataType;
-				addEvtAssignPxInstruction(instructions1, instructions2, 4, "#" + key.fullName);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 4, 0);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 4, 1);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 4, 2);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 4, 3);
+				addEvtAssignPxInstruction(evtInstructions, 4, "#" + key.fullName);
+				addEvtNextIndexPxInstruction(evtInstructions, 4, 0);
+				addEvtNextIndexPxInstruction(evtInstructions, 4, 1);
+				addEvtNextIndexPxInstruction(evtInstructions, 4, 2);
+				addEvtNextIndexPxInstruction(evtInstructions, 4, 3);
 				break;
 
 			case INT64:
@@ -239,15 +279,15 @@ public class SclTemplateFactory extends TemplateFactory {
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
 				p4DataType = key.dataType;
-				addEvtAssignPxInstruction(instructions1, instructions2, 4, "#" + key.fullName);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 4, 0);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 4, 1);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 4, 2);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 4, 3);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 4, 4);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 4, 5);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 4, 6);
-				addEvtNextIndexPxInstruction(instructions1, instructions2, 4, 7);
+				addEvtAssignPxInstruction(evtInstructions, 4, "#" + key.fullName);
+				addEvtNextIndexPxInstruction(evtInstructions, 4, 0);
+				addEvtNextIndexPxInstruction(evtInstructions, 4, 1);
+				addEvtNextIndexPxInstruction(evtInstructions, 4, 2);
+				addEvtNextIndexPxInstruction(evtInstructions, 4, 3);
+				addEvtNextIndexPxInstruction(evtInstructions, 4, 4);
+				addEvtNextIndexPxInstruction(evtInstructions, 4, 5);
+				addEvtNextIndexPxInstruction(evtInstructions, 4, 6);
+				addEvtNextIndexPxInstruction(evtInstructions, 4, 7);
 				break;
 
 			case STRING:
@@ -260,7 +300,7 @@ public class SclTemplateFactory extends TemplateFactory {
 
 		}
 
-		addEvtNextIndexInstruction(instructions1, instructions2, "" + Constant.END_FLAG.getValue());
+		addEvtNextIndexInstruction(evtInstructions, "" + Constant.END_FLAG.getValue());
 
 		final TemplateData templateData = new TemplateData();
 		templateData.setOutputFileName(functionName);
@@ -279,8 +319,6 @@ public class SclTemplateFactory extends TemplateFactory {
 
 		final List<Variable> vars = new ArrayList<>();
 		interfaceNode.put("tempVars", vars);
-		vars.add(new Variable("full", "Bool"));
-		vars.add(new Variable("end", "DInt"));
 		vars.add(new Variable("i", "DInt"));
 		if (createP2Var) {
 			vars.add(new Variable("p2", "UInt"));
@@ -300,26 +338,11 @@ public class SclTemplateFactory extends TemplateFactory {
 
 		final List<String> instructions = new ArrayList<>();
 		bodyNode.put("instructions", instructions);
-		instructions.add("IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN");
-		instructions.add(SPC4 + "#full := #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) < " + length + ";");
-		instructions.add("ELSE");
-		instructions.add(SPC4 + "#full := #Handle.BufferReadPointer - #Handle.BufferWritePointer < " + length + ";");
-		instructions.add("END_IF;");
+		instructions.add("#i := \"GetNextWritePointer\"(Length := " + length + ", Handle := #Handle);");
+		instructions.add("IF #i >= 0 THEN");
 		instructions.add("");
-		instructions.add("IF NOT #full THEN");
-		instructions.add("");
-		instructions.add(SPC4 + "#end := #Handle.BufferEnd;");
-		instructions.add(SPC4 + "#i := #Handle.BufferWritePointer;");
-		instructions.add("");
-		instructions.add(SPC4 + "IF #i + " + length + " < #end THEN");
-		instructions.add("");
-		instructions.addAll(instructions1);
-		instructions.add(SPC4 + "ELSE");
-		instructions.add("");
-		instructions.addAll(instructions2);
-		instructions.add(SPC4 + "END_IF;");
-		instructions.add("");
-		instructions.add(SPC4 + "#Handle.BufferWritePointer := #i;");
+		instructions.addAll(evtInstructions);
+		instructions.add(TAB + "#Handle.BufferWritePointer := #i;");
 		instructions.add("");
 		instructions.add("END_IF;");
 
@@ -327,38 +350,31 @@ public class SclTemplateFactory extends TemplateFactory {
 
 	}
 
-	private void addEvtNextIndexInstruction(List<String> instructions1, List<String> instructions2, String indexInstruction) {
-
-		instructions1.add(SPC8 + "#i := #i + 1;");
-		instructions1.add(SPC8 + "#Handle.Buffer[#i] := " + indexInstruction + ";");
-		instructions1.add("");			
-
-		instructions2.add(SPC8 + "IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;");
-		instructions2.add(SPC8 + "#Handle.Buffer[#i] := " + indexInstruction + ";");
-		instructions2.add("");
-
+	private void addEvtNextIndexInstruction(List<String> instructions, String indexInstruction) {
+		instructions.add(TAB + "#i := #i + 1;");
+		instructions.add(TAB + "#Handle.Buffer[#i] := " + indexInstruction + ";");
+		instructions.add("");			
 	}
 
-	private void addEvtAssignPxInstruction(List<String> instructions1, List<String> instructions2, int pIndex, String pInstruction) {
-		instructions1.add(SPC8 + "#p" + pIndex + " := " + pInstruction + ";");
-		instructions2.add(SPC8 + "#p" + pIndex + " := " + pInstruction + ";");
+	private void addEvtAssignPxInstruction(List<String> instructions, int pIndex, String pInstruction) {
+		instructions.add(TAB + "#p" + pIndex + " := " + pInstruction + ";");
+		instructions.add("");			
 	}
 	
-	private void addEvtNextIndexPxInstruction(List<String> instructions1, List<String> instructions2, int pIndex, int pBytesIndex) {
-
-		instructions1.add(SPC8 + "#i := #i + 1;");
-		instructions1.add(SPC8 + "#Handle.Buffer[#i] := #p" + pIndex + "Bytes[" + pBytesIndex + "];");
-		instructions1.add("");
-
-		instructions2.add(SPC8 + "IF #i < end THEN #i := #i + 1; ELSE #i := 0; END_IF;");
-		instructions2.add(SPC8 + "#Handle.Buffer[#i] := #p" + pIndex + "Bytes[" + pBytesIndex + "];");
-		instructions2.add("");
-
+	private void addEvtNextIndexPxInstruction(List<String> instructions, int pIndex, int pBytesIndex) {
+		instructions.add(TAB + "#i := #i + 1;");
+		instructions.add(TAB + "#Handle.Buffer[#i] := #p" + pIndex + "Bytes[" + pBytesIndex + "];");
+		instructions.add("");
 	}
 
 	private TemplateData createFunction(String name, List<Variable> inputVars,
 			List<Variable> inOutVars, List<Variable> tempVars, List<String> instructions) {
 		return createFunction(name, null, null, inputVars, inOutVars, tempVars, instructions);
+	}
+	
+	private TemplateData createFunction(String name, DataType returnType, List<Variable> inputVars,
+			List<Variable> inOutVars, List<Variable> tempVars, List<String> instructions) {
+		return createFunction(name, null, returnType, inputVars, inOutVars, tempVars, instructions);
 	}
 
 	private TemplateData createFunction(String name, String[] path, DataType returnType,

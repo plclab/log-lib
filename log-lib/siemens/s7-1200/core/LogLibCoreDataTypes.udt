@@ -6,6 +6,7 @@ VERSION : 0.1
       BufferEnd : DInt := 3999;
       BufferWritePointer : DInt := 0;
       BufferReadPointer : DInt := 0;
+      BufferOverflow : DInt := -1;
       MagicByte : Byte := 122;
    END_STRUCT;
 
