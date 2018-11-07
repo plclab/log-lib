@@ -84,7 +84,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 
 		final List<Variable> vars = new ArrayList<>();
 		vars.add(new Variable("BufferAddress", "DWORD"));
-		vars.add(new Variable("BufferSize", "UDINT"));
+		vars.add(new Variable("BufferSize", "DINT"));
 		vars.add(new Variable("BufferEndAddress", "DWORD"));
 		vars.add(new Variable("BufferWritePointer", "DINT"));
 		vars.add(new Variable("BufferReadPointer", "DINT"));

@@ -4,7 +4,7 @@
 TYPE LogBufferHandle :
 STRUCT
     BufferAddress: DWORD;
-    BufferSize: UDINT;
+    BufferSize: DINT;
     BufferEndAddress: DWORD;
     BufferWritePointer: DINT;
     BufferReadPointer: DINT;

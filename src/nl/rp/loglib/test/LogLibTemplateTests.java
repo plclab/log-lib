@@ -10,6 +10,7 @@ import nl.rp.loglib.impl.LogLibImpl;
 import nl.rp.loglib.impl.bachmann.mplc.BachmannMPlc;
 import nl.rp.loglib.impl.beckhoff.tc2.BeckhoffTc2;
 import nl.rp.loglib.impl.codesys.v2.CoDeSysV2;
+import nl.rp.loglib.impl.siemens.s71200.SiemensS71200;
 
 public class LogLibTemplateTests {
 
@@ -62,6 +63,9 @@ public class LogLibTemplateTests {
 			logLibImpl = new BachmannMPlc();
 			logLibImpl.generate(configuration);
 
+			logLibImpl = new SiemensS71200();
+			logLibImpl.generate(configuration);
+
 			printByteOrders();
 			
 		} catch (Exception e) {
@@ -98,6 +102,16 @@ public class LogLibTemplateTests {
 		new File("log-lib/beckhoff/tc3/basic").mkdirs();
 		new File("log-lib/beckhoff/tc3/comm/tcp").mkdirs();
 		new File("log-lib/beckhoff/tc3/core").mkdirs();
+
+		//Siemens S7 1200
+		new File("log-lib/siemens/s7-1200/basic").mkdirs();
+		new File("log-lib/siemens/s7-1200/comm/tcp").mkdirs();
+		new File("log-lib/siemens/s7-1200/core").mkdirs();
+
+		//Siemens S7 300 IM151-8
+		new File("log-lib/siemens/s7-300/IM151-8/basic").mkdirs();
+		new File("log-lib/siemens/s7-300/IM151-8/comm/tcp").mkdirs();
+		new File("log-lib/siemens/s7-300/IM151-8/core").mkdirs();
 
 		//Java
 		new File("log-lib/java/basic").mkdirs();

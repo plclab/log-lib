@@ -90,11 +90,13 @@ public class CoDeSysV2 extends LogLibImpl {
 				final String outputFile = OUTPUT_BASE_DIR + "/" + getOutputDirectory() + "/" +
 						libraryDir + "/" + templateData.getOutputFileName() + OUTPUT_FILE_EXTENSION;
 
-				final Writer out = new OutputStreamWriter(
+				final Writer writer = new OutputStreamWriter(
 						new FileOutputStream(new File(outputFile)));
 
-				template.process(templateData.getModel(), out);
+				template.process(templateData.getModel(), writer);
 
+				writer.close();
+				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

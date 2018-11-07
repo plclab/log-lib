@@ -1,0 +1,12 @@
+TYPE "LogBuffer"
+VERSION : 0.1
+   STRUCT
+      Buffer : Array[0..3999] of Byte;
+      BufferSize : DInt := 4000;
+      BufferEnd : DInt := 3999;
+      BufferWritePointer : DInt := 0;
+      BufferReadPointer : DInt := 0;
+      MagicByte : Byte := 122;
+   END_STRUCT;
+
+END_TYPE
