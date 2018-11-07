@@ -23,7 +23,7 @@ END_VAR
 IF Handle.BufferWritePointer >= Handle.BufferReadPointer THEN
     full := Handle.BufferSize - (Handle.BufferWritePointer - Handle.BufferReadPointer) < 10;
 ELSE
-    full := Handle.BufferSize - (Handle.BufferSize + (Handle.BufferWritePointer - Handle.BufferReadPointer)) < 10;
+    full := Handle.BufferReadPointer - Handle.BufferWritePointer < 10;
 END_IF
 
 IF NOT full THEN

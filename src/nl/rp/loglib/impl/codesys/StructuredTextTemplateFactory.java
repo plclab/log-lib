@@ -483,7 +483,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		instructions.add("IF Handle.BufferWritePointer >= Handle.BufferReadPointer THEN");
 		instructions.add(SPC4 + "full := Handle.BufferSize - (Handle.BufferWritePointer - Handle.BufferReadPointer) < " + length + ";");
 		instructions.add("ELSE");
-		instructions.add(SPC4 + "full := Handle.BufferSize - (Handle.BufferSize + (Handle.BufferWritePointer - Handle.BufferReadPointer)) < " + length + ";");
+		instructions.add(SPC4 + "full := Handle.BufferReadPointer - Handle.BufferWritePointer < " + length + ";");
 		instructions.add("END_IF");
 		instructions.add("");
 		instructions.add("IF NOT full THEN");
