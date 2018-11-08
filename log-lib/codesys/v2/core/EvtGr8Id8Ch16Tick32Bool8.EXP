@@ -15,110 +15,49 @@ VAR_IN_OUT
     Handle: LogBufferHandle;
 END_VAR
 VAR
-    full: BOOL;
-    start: DWORD;
-    end: DWORD;
+    i: DINT;
     p1: POINTER TO BYTE;
     p2: POINTER TO BYTE;
     p3: POINTER TO UDINT;
 END_VAR
 (* @END_DECLARATION := '0' *)
-IF Handle.BufferWritePointer >= Handle.BufferReadPointer THEN
-    full := Handle.BufferSize - (Handle.BufferWritePointer - Handle.BufferReadPointer) < 13;
-ELSE
-    full := Handle.BufferReadPointer - Handle.BufferWritePointer < 13;
-END_IF
+i := GetNextWritePointer(13, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i >= 0 THEN
 
-IF NOT full THEN
+    p1 := Handle.BufferAddress + i;
 
-    start := Handle.BufferAddress;
-    end := Handle.BufferEndAddress;
-    p1 := start + Handle.BufferWritePointer;
+    p1^ := START_FLAG;
 
-    IF p1 + 13 < end THEN
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
 
-        p1 := p1 + 1;
-        p1^ := START_FLAG;
+    p1 := p1 + 1;
+    p1^ := EVT_GR8_ID8_CH16_TICK32_BOOL8;
 
-        p1 := p1 + 1;
-        p1^ := Handle.MagicByte;
+    p1 := p1 + 1;
+    p1^ := Group;
 
-        p1 := p1 + 1;
-        p1^ := EVT_GR8_ID8_CH16_TICK32_BOOL8;
+    p1 := p1 + 1;
+    p1^ := Id;
 
-        p1 := p1 + 1;
-        p1^ := Group;
+    p1 := p1 + 1;
+    p2 := ADR(Channel);
+    p1^ := p2^;
 
-        p1 := p1 + 1;
-        p1^ := Id;
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
 
-        p1 := p1 + 1;
-        p2 := ADR(Channel);
-        p1^ := p2^;
+    p3 := p1 + 1;
+    p3^ := Tick;
 
-        p1 := p1 + 1;
-        p2 := p2 + 1;
-        p1^ := p2^;
+    p1 := p1 + 5;
+    p1^ := BOOL_TO_BYTE(Value);
 
-        p3 := p1 + 1;
-        p3^ := Tick;
+    p1 := p1 + 1;
+    p1^ := END_FLAG;
 
-        p1 := p1 + 5;
-        p1^ := BOOL_TO_BYTE(Value);
-
-        p1 := p1 + 1;
-        p1^ := END_FLAG;
-
-    ELSE
-
-        IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF
-        p1^ := START_FLAG;
-
-        IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF
-        p1^ := Handle.MagicByte;
-
-        IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF
-        p1^ := EVT_GR8_ID8_CH16_TICK32_BOOL8;
-
-        IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF
-        p1^ := Group;
-
-        IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF
-        p1^ := Id;
-
-        IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF
-        p2 := ADR(Channel);
-        p1^ := p2^;
-
-        IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF
-        p2 := p2 + 1;
-        p1^ := p2^;
-
-        IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF
-        p2 := ADR(Tick);
-        p1^ := p2^;
-
-        IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF
-        p2 := p2 + 1;
-        p1^ := p2^;
-
-        IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF
-        p2 := p2 + 1;
-        p1^ := p2^;
-
-        IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF
-        p2 := p2 + 1;
-        p1^ := p2^;
-
-        IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF
-        p1^ := BOOL_TO_BYTE(Value);
-
-        IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF
-        p1^ := END_FLAG;
-
-    END_IF
-
-    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - start);
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
 
 END_IF
 END_FUNCTION

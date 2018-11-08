@@ -8,6 +8,7 @@ STRUCT
     BufferEndAddress: DWORD;
     BufferWritePointer: DINT;
     BufferReadPointer: DINT;
+    BufferOverflow: DINT;
     MagicByte: BYTE := MAGIC_BYTE_V1_LITTLE_ENDIAN;
 END_STRUCT
 END_TYPE

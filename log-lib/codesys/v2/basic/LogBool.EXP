@@ -5,13 +5,21 @@
 (* @SYMFILEFLAGS := '2048' *)
 FUNCTION LogBool : BOOL
 VAR_INPUT
-    Value: BOOL;
+    Group: BYTE;
+    Id: BYTE;
     Channel: UINT;
+    Value: BOOL;
 END_VAR
 VAR
 END_VAR
 (* @END_DECLARATION := '0' *)
-IF Channel < 256 THEN
+IF Group > 0 OR Id > 0 THEN
+    IF Channel < 256 THEN
+        EvtGr8Id8Ch8Tick32Bool8(Group, Id, UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);
+    ELSE
+        EvtGr8Id8Ch16Tick32Bool8(Group, Id, Channel, GlobalTick, Value, GlobalLogBufferHandle);
+    END_IF
+ELSIF Channel < 256 THEN
     EvtCh8Tick32Bool8(UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);
 ELSE
     EvtCh16Tick32Bool8(Channel, GlobalTick, Value, GlobalLogBufferHandle);

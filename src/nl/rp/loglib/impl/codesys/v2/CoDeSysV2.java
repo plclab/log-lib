@@ -52,10 +52,16 @@ public class CoDeSysV2 extends LogLibImpl {
 			templateData = templateFactory.getCreateBufferHandleFunctionTemplateData();
 			processTemplate(template, templateData, LIB_CORE_DIR);			
 
+			//Create GetNextWritePointer function
+			templateData = templateFactory.getGetNextWritePointerFunctionTemplateData();
+			processTemplate(template, templateData, LIB_CORE_DIR);			
+
 			//Create Evt functions
-			for (Constant constant : Constant.CORE_EVENTS) {
+			for (Constant constant : Constant.CORE_EVENTS_DEFAULT) {
 				templateData = templateFactory.getEvtFunctionTemplateData(constant);
-				processTemplate(template, templateData, LIB_CORE_DIR);
+				if (templateData != null) {					
+					processTemplate(template, templateData, LIB_CORE_DIR);
+				}
 			}
 
 			//Create global variables
@@ -68,12 +74,17 @@ public class CoDeSysV2 extends LogLibImpl {
 
 			processTemplate(template, templateFactory.getCreateGlobalBufferHandleFunctionTemplateData(), LIB_BASIC_DIR);			
 			processTemplate(template, templateFactory.getLogBoolFunctionTemplateData(), LIB_BASIC_DIR);			
-			processTemplate(template, templateFactory.getLogDintFunctionTemplateData(), LIB_BASIC_DIR);			
+			processTemplate(template, templateFactory.getLogIntFunctionTemplateData(), LIB_BASIC_DIR);			
+			processTemplate(template, templateFactory.getLogDIntFunctionTemplateData(), LIB_BASIC_DIR);			
+			processTemplate(template, templateFactory.getLogUDIntFunctionTemplateData(), LIB_BASIC_DIR);			
 			processTemplate(template, templateFactory.getLogRealFunctionTemplateData(), LIB_BASIC_DIR);			
+			processTemplate(template, templateFactory.getLogLRealFunctionTemplateData(), LIB_BASIC_DIR);			
 			processTemplate(template, templateFactory.getMonitorBoolFunctionTemplateData(), LIB_BASIC_DIR);			
-			processTemplate(template, templateFactory.getMonitorDintFunctionTemplateData(), LIB_BASIC_DIR);			
+			processTemplate(template, templateFactory.getMonitorIntFunctionTemplateData(), LIB_BASIC_DIR);			
+			processTemplate(template, templateFactory.getMonitorDIntFunctionTemplateData(), LIB_BASIC_DIR);			
+			processTemplate(template, templateFactory.getMonitorUDIntFunctionTemplateData(), LIB_BASIC_DIR);			
 			processTemplate(template, templateFactory.getMonitorRealFunctionTemplateData(), LIB_BASIC_DIR);			
-
+			processTemplate(template, templateFactory.getMonitorLRealFunctionTemplateData(), LIB_BASIC_DIR);			
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -96,7 +107,7 @@ public class CoDeSysV2 extends LogLibImpl {
 				template.process(templateData.getModel(), writer);
 
 				writer.close();
-				
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

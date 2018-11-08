@@ -1,0 +1,32 @@
+
+(* @NESTEDCOMMENTS := 'No' *)
+(* @PATH := '\/core\/evt' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION GetNextWritePointer : DINT
+VAR_INPUT
+    Length: DINT;
+    WritePointer: DINT;
+    ReadPointer: DINT;
+    BufferSize: DINT;
+END_VAR
+VAR_IN_OUT
+    BufferOverflow: DINT;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+GetNextWritePointer := -1;
+IF WritePointer >= ReadPointer THEN
+    IF WritePointer + Length + 1 >= BufferSize THEN
+        IF ReadPointer >= Length THEN
+            BufferOverflow := WritePointer;
+            GetNextWritePointer := 0;
+        END_IF
+    ELSIF BufferSize - (WritePointer - ReadPointer) >= Length THEN
+        GetNextWritePointer := WritePointer + 1;
+    END_IF
+ELSIF ReadPointer - WritePointer >= Length THEN
+    GetNextWritePointer := WritePointer + 1;
+END_IF
+END_FUNCTION

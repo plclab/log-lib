@@ -88,6 +88,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		vars.add(new Variable("BufferEndAddress", "DWORD"));
 		vars.add(new Variable("BufferWritePointer", "DINT"));
 		vars.add(new Variable("BufferReadPointer", "DINT"));
+		vars.add(new Variable("BufferOverflow", "DINT"));
 		vars.add(new Variable("MagicByte", "BYTE", Constant.MAGIC_BYTE_V1_LITTLE_ENDIAN.name()));
 
 		final TemplateData templateData = new TemplateData();
@@ -148,122 +149,130 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 	}
 
 	public TemplateData getLogBoolFunctionTemplateData() {
-
-		final List<Variable> inputVars = new ArrayList<>();	
-		inputVars.add(new Variable("Value", "BOOL"));
-		inputVars.add(new Variable("Channel", "UINT"));
-
-		final List<String> instructions = new ArrayList<>();
-		instructions.add("IF Channel < 256 THEN");
-		instructions.add(TAB + "EvtCh8Tick32Bool8(UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);");
-		instructions.add("ELSE");
-		instructions.add(TAB + "EvtCh16Tick32Bool8(Channel, GlobalTick, Value, GlobalLogBufferHandle);");
-		instructions.add("END_IF");
-
-		return createFunction("LogBool", "basic", inputVars, null, null, instructions);
-
+		return createBasicLogFunction("LogBool", Key.BOOL8);
 	}
 
-	public TemplateData getLogDintFunctionTemplateData() {
+	public TemplateData getLogIntFunctionTemplateData() {
+		return createBasicLogFunction("LogInt", Key.INT16);
+	}
 
-		final List<Variable> inputVars = new ArrayList<>();	
-		inputVars.add(new Variable("Value", "DINT"));
-		inputVars.add(new Variable("Channel", "UINT"));
+	public TemplateData getLogDIntFunctionTemplateData() {
+		return createBasicLogFunction("LogDInt", Key.INT32);
+	}
 
-		final List<String> instructions = new ArrayList<>();
-		instructions.add("IF Channel < 256 THEN");
-		instructions.add(TAB + "EvtCh8Tick32Int32(UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);");
-		instructions.add("ELSE");
-		instructions.add(TAB + "EvtCh16Tick32Int32(Channel, GlobalTick, Value, GlobalLogBufferHandle);");
-		instructions.add("END_IF");
-
-		return createFunction("LogDint", "basic", inputVars, null, null, instructions);
-
+	public TemplateData getLogUDIntFunctionTemplateData() {
+		return createBasicLogFunction("LogUDInt", Key.UINT32);
 	}
 
 	public TemplateData getLogRealFunctionTemplateData() {
+		return createBasicLogFunction("LogReal", Key.REAL32);
+	}
 
-		final List<Variable> inputVars = new ArrayList<>();	
-		inputVars.add(new Variable("Value", "REAL"));
-		inputVars.add(new Variable("Channel", "UINT"));
-
-		final List<String> instructions = new ArrayList<>();
-		instructions.add("IF Channel < 256 THEN");
-		instructions.add(TAB + "EvtCh8Tick32Real32(UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);");
-		instructions.add("ELSE");
-		instructions.add(TAB + "EvtCh16Tick32Real32(Channel, GlobalTick, Value, GlobalLogBufferHandle);");
-		instructions.add("END_IF");
-
-		return createFunction("LogReal", "basic", inputVars, null, null, instructions);
-
+	public TemplateData getLogLRealFunctionTemplateData() {
+		return createBasicLogFunction("LogLReal", Key.REAL64);
 	}
 
 	public TemplateData getMonitorBoolFunctionTemplateData() {
-
-		final List<Variable> inputVars = new ArrayList<>();	
-		inputVars.add(new Variable("Value", "BOOL"));
-		inputVars.add(new Variable("Channel", "UINT"));
-
-		final List<Variable> inOutVars = new ArrayList<>();	
-		inOutVars.add(new Variable("Data", "BOOL"));
-
-		final List<String> instructions = new ArrayList<>();
-		instructions.add("IF Value <> Data THEN");
-		instructions.add(TAB + "IF Channel < 256 THEN");
-		instructions.add(TABTAB + "EvtCh8Tick32Bool8(UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);");
-		instructions.add(TAB + "ELSE");
-		instructions.add(TABTAB + "EvtCh16Tick32Bool8(Channel, GlobalTick, Value, GlobalLogBufferHandle);");
-		instructions.add(TAB + "END_IF");
-		instructions.add(TAB + "Data := Value;");
-		instructions.add("END_IF");
-
-		return createFunction("MonitorBool", "basic", inputVars, inOutVars, null, instructions);
-
+		return createBasicMonitorFunction("MonitorBool", Key.BOOL8);
 	}
 
-	public TemplateData getMonitorDintFunctionTemplateData() {
+	public TemplateData getMonitorIntFunctionTemplateData() {
+		return createBasicMonitorFunction("MonitorInt", Key.INT16);
+	}
 
-		final List<Variable> inputVars = new ArrayList<>();	
-		inputVars.add(new Variable("Value", "DINT"));
-		inputVars.add(new Variable("Channel", "UINT"));
+	public TemplateData getMonitorDIntFunctionTemplateData() {
+		return createBasicMonitorFunction("MonitorDInt", Key.INT32);
+	}
 
-		final List<Variable> inOutVars = new ArrayList<>();	
-		inOutVars.add(new Variable("Data", "DINT"));
-
-		final List<String> instructions = new ArrayList<>();
-		instructions.add("IF Value <> Data THEN");
-		instructions.add(TAB + "IF Channel < 256 THEN");
-		instructions.add(TABTAB + "EvtCh8Tick32Int32(UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);");
-		instructions.add(TAB + "ELSE");
-		instructions.add(TABTAB + "EvtCh16Tick32Int32(Channel, GlobalTick, Value, GlobalLogBufferHandle);");
-		instructions.add(TAB + "END_IF");
-		instructions.add(TAB + "Data := Value;");
-		instructions.add("END_IF");
-
-		return createFunction("MonitorDint", "basic", inputVars, inOutVars, null, instructions);
-
+	public TemplateData getMonitorUDIntFunctionTemplateData() {
+		return createBasicMonitorFunction("MonitorUDInt", Key.UINT32);
 	}
 
 	public TemplateData getMonitorRealFunctionTemplateData() {
+		return createBasicMonitorFunction("MonitorReal", Key.REAL32);
+	}
+
+	public TemplateData getMonitorLRealFunctionTemplateData() {
+		return createBasicMonitorFunction("MonitorLReal", Key.REAL64);
+	}
+
+	private TemplateData createBasicLogFunction(String name, Key valueKey) {
 
 		final List<Variable> inputVars = new ArrayList<>();	
-		inputVars.add(new Variable("Value", "REAL"));
+		inputVars.add(new Variable("Group", "BYTE"));
+		inputVars.add(new Variable("Id", "BYTE"));
 		inputVars.add(new Variable("Channel", "UINT"));
+		inputVars.add(new Variable("Value", getDataType(valueKey.dataType)));
+
+		final List<String> instructions = new ArrayList<>();
+		addBasicLogInstructions(instructions, valueKey, "");
+
+		return createFunction(name, "basic", inputVars, null, null, instructions);
+
+	}
+
+	private TemplateData createBasicMonitorFunction(String name, Key valueKey) {
+
+		final List<Variable> inputVars = new ArrayList<>();	
+		inputVars.add(new Variable("Group", "BYTE"));
+		inputVars.add(new Variable("Id", "BYTE"));
+		inputVars.add(new Variable("Channel", "UINT"));
+		inputVars.add(new Variable("Value", getDataType(valueKey.dataType)));
 
 		final List<Variable> inOutVars = new ArrayList<>();	
-		inOutVars.add(new Variable("Data", "REAL"));
+		inOutVars.add(new Variable("Data", getDataType(valueKey.dataType)));
 
 		final List<String> instructions = new ArrayList<>();
 		instructions.add("IF Value <> Data THEN");
-		instructions.add(TAB + "IF Channel < 256 THEN");
-		instructions.add(TABTAB + "EvtCh8Tick32Real32(UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);");
-		instructions.add(TAB + "ELSE");
-		instructions.add(TABTAB + "EvtCh16Tick32Real32(Channel, GlobalTick, Value, GlobalLogBufferHandle);");
-		instructions.add(TAB + "END_IF");
+		addBasicLogInstructions(instructions, valueKey, TAB);
 		instructions.add(TAB + "Data := Value;");
 		instructions.add("END_IF");
 
-		return createFunction("MonitorReal", "basic", inputVars, inOutVars, null, instructions);
+		return createFunction(name, "basic", inputVars, inOutVars, null, instructions);
+
+	}
+
+	private void addBasicLogInstructions(List<String> instructions, Key valueKey, String tab) {
+		instructions.add(tab + "IF Group > 0 OR Id > 0 THEN");
+		instructions.add(tab + TAB + "IF Channel < 256 THEN");
+		instructions.add(tab + TABTAB + "EvtGr8Id8Ch8Tick32" + valueKey.shortName + "(Group, Id, UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);");
+		instructions.add(tab + TAB + "ELSE");
+		instructions.add(tab + TABTAB + "EvtGr8Id8Ch16Tick32" + valueKey.shortName + "(Group, Id, Channel, GlobalTick, Value, GlobalLogBufferHandle);");
+		instructions.add(tab + TAB + "END_IF");
+		instructions.add(tab + "ELSIF Channel < 256 THEN");
+		instructions.add(tab + TAB + "EvtCh8Tick32" + valueKey.shortName + "(UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);");
+		instructions.add(tab + "ELSE");
+		instructions.add(tab + TAB + "EvtCh16Tick32" + valueKey.shortName + "(Channel, GlobalTick, Value, GlobalLogBufferHandle);");
+		instructions.add(tab + "END_IF");
+	}
+
+	public TemplateData getGetNextWritePointerFunctionTemplateData() {
+
+		final List<Variable> inputVars = new ArrayList<>();	
+		inputVars.add(new Variable("Length", "DINT"));
+		inputVars.add(new Variable("WritePointer", "DINT"));
+		inputVars.add(new Variable("ReadPointer", "DINT"));
+		inputVars.add(new Variable("BufferSize", "DINT"));
+
+		final List<Variable> inOutVars = new ArrayList<>();	
+		inOutVars.add(new Variable("BufferOverflow", "DINT"));
+
+		final List<String> instructions = new ArrayList<>();
+		instructions.add("GetNextWritePointer := -1;");
+		instructions.add("IF WritePointer >= ReadPointer THEN");
+		instructions.add(TAB + "IF WritePointer + Length + 1 >= BufferSize THEN");
+		instructions.add(TABTAB + "IF ReadPointer >= Length THEN");
+		instructions.add(TABTABTAB + "BufferOverflow := WritePointer;");
+		instructions.add(TABTABTAB + "GetNextWritePointer := 0;");
+		instructions.add(TABTAB + "END_IF");
+		instructions.add(TAB + "ELSIF BufferSize - (WritePointer - ReadPointer) >= Length THEN");
+		instructions.add(TABTAB + "GetNextWritePointer := WritePointer + 1;");
+		instructions.add(TAB + "END_IF");
+		instructions.add("ELSIF ReadPointer - WritePointer >= Length THEN");
+		instructions.add(TAB + "GetNextWritePointer := WritePointer + 1;");
+		instructions.add("END_IF");
+
+		return createFunction("GetNextWritePointer", new String[] {"core", "evt"}, DataType.INT32, inputVars, inOutVars, null, instructions);
 
 	}
 
@@ -276,12 +285,11 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 
 		final List<Variable> inputVars = new ArrayList<>();	
 
-		final List<String> instructions1 = new ArrayList<String>();	
-		final List<String> instructions2 = new ArrayList<String>();	
+		final List<String> evtInstructions = new ArrayList<String>();	
 
-		addEvtP1Instruction(instructions1, instructions2, Constant.START_FLAG.name());
-		addEvtP1Instruction(instructions1, instructions2, "Handle.MagicByte");
-		addEvtP1Instruction(instructions1, instructions2, evtConstant.name());
+		addEvtP1Instruction(evtInstructions, Constant.START_FLAG.name(), 0);
+		addEvtP1Instruction(evtInstructions, "Handle.MagicByte");
+		addEvtP1Instruction(evtInstructions, evtConstant.name());
 
 		boolean createP2Var = false;
 		DataType p3DataType = null;
@@ -307,15 +315,15 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 			case GR8:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtP1Instruction(instructions1, instructions2, key.fullName);
+				addEvtP1Instruction(evtInstructions, key.fullName);
 				nextP1Step = 1;
 				break;
 
 			case GR16:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtP2Instruction(instructions1, instructions2, "ADR(" + key.fullName + ")");
-				addEvtP2Instruction(instructions1, instructions2, "p2 + 1");
+				addEvtP2Instruction(evtInstructions, "ADR(" + key.fullName + ")");
+				addEvtP2Instruction(evtInstructions, "p2 + 1");
 				nextP1Step = 1;
 				createP2Var = true;
 				break;
@@ -323,15 +331,15 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 			case ID8:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtP1Instruction(instructions1, instructions2, key.fullName);
+				addEvtP1Instruction(evtInstructions, key.fullName);
 				nextP1Step = 1;
 				break;
 
 			case ID16:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtP2Instruction(instructions1, instructions2, "ADR(" + key.fullName + ")");
-				addEvtP2Instruction(instructions1, instructions2, "p2 + 1");
+				addEvtP2Instruction(evtInstructions, "ADR(" + key.fullName + ")");
+				addEvtP2Instruction(evtInstructions, "p2 + 1");
 				nextP1Step = 1;
 				createP2Var = true;
 				break;
@@ -339,15 +347,15 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 			case CH8:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtP1Instruction(instructions1, instructions2, key.fullName);
+				addEvtP1Instruction(evtInstructions, key.fullName);
 				nextP1Step = 1;
 				break;
 
 			case CH16:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtP2Instruction(instructions1, instructions2, "ADR(" + key.fullName + ")");
-				addEvtP2Instruction(instructions1, instructions2, "p2 + 1");
+				addEvtP2Instruction(evtInstructions, "ADR(" + key.fullName + ")");
+				addEvtP2Instruction(evtInstructions, "p2 + 1");
 				nextP1Step = 1;
 				createP2Var = true;
 				break;
@@ -355,7 +363,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 			case BOOL8:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtP1Instruction(instructions1, instructions2, "BOOL_TO_BYTE(" + key.fullName + ")", nextP1Step);
+				addEvtP1Instruction(evtInstructions, "BOOL_TO_BYTE(" + key.fullName + ")", nextP1Step);
 				nextP1Step = 1;
 				break;
 
@@ -365,7 +373,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 			case UINT8:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtP1Instruction(instructions1, instructions2, key.fullName, nextP1Step);
+				addEvtP1Instruction(evtInstructions, key.fullName, nextP1Step);
 				nextP1Step = 1;
 				break;
 
@@ -373,8 +381,8 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 			case UINT16:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
-				addEvtP2Instruction(instructions1, instructions2, "ADR(" + key.fullName + ")", nextP1Step);
-				addEvtP2Instruction(instructions1, instructions2, "p2 + 1");
+				addEvtP2Instruction(evtInstructions, "ADR(" + key.fullName + ")", nextP1Step);
+				addEvtP2Instruction(evtInstructions, "p2 + 1");
 				nextP1Step = 1;
 				createP2Var = true;
 				break;
@@ -383,11 +391,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
 				p3DataType = key.dataType;
-				addEvtP3Instruction(instructions1, key.fullName, nextP1Step);
-				addEvtP2Instruction(null, instructions2, "ADR(" + key.fullName + ")");
-				addEvtP2Instruction(null, instructions2, "p2 + 1");
-				addEvtP2Instruction(null, instructions2, "p2 + 1");
-				addEvtP2Instruction(null, instructions2, "p2 + 1");
+				addEvtP3Instruction(evtInstructions, key.fullName, nextP1Step);
 				nextP1Step += p3DataType.getLength();
 				createP2Var = true;
 				break;
@@ -398,11 +402,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
 				p4DataType = key.dataType;
-				addEvtP4Instruction(instructions1, key.fullName, nextP1Step);
-				addEvtP2Instruction(null, instructions2, "ADR(" + key.fullName + ")");
-				addEvtP2Instruction(null, instructions2, "p2 + 1");
-				addEvtP2Instruction(null, instructions2, "p2 + 1");
-				addEvtP2Instruction(null, instructions2, "p2 + 1");
+				addEvtP4Instruction(evtInstructions, key.fullName, nextP1Step);
 				nextP1Step += p4DataType.getLength();
 				createP2Var = true;
 				break;
@@ -418,15 +418,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
 				p4DataType = key.dataType;
-				addEvtP4Instruction(instructions1, key.fullName, nextP1Step);
-				addEvtP2Instruction(null, instructions2, "ADR(" + key.fullName + ")");
-				addEvtP2Instruction(null, instructions2, "p2 + 1");
-				addEvtP2Instruction(null, instructions2, "p2 + 1");
-				addEvtP2Instruction(null, instructions2, "p2 + 1");
-				addEvtP2Instruction(null, instructions2, "p2 + 1");
-				addEvtP2Instruction(null, instructions2, "p2 + 1");
-				addEvtP2Instruction(null, instructions2, "p2 + 1");
-				addEvtP2Instruction(null, instructions2, "p2 + 1");
+				addEvtP4Instruction(evtInstructions, key.fullName, nextP1Step);
 				nextP1Step += p4DataType.getLength();
 				createP2Var = true;
 				break;
@@ -441,7 +433,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 
 		}
 
-		addEvtP1Instruction(instructions1, instructions2, Constant.END_FLAG.name(), nextP1Step);
+		addEvtP1Instruction(evtInstructions, Constant.END_FLAG.name(), nextP1Step);
 
 		final TemplateData templateData = new TemplateData();
 		templateData.setOutputFileName(functionName);
@@ -461,9 +453,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 
 		final List<Variable> vars = new ArrayList<>();
 		interfaceNode.put("vars", vars);
-		vars.add(new Variable("full", "BOOL"));
-		vars.add(new Variable("start", "DWORD"));
-		vars.add(new Variable("end", "DWORD"));
+		vars.add(new Variable("i", "DINT"));
 		vars.add(new Variable("p1", "POINTER TO BYTE"));
 		if (createP2Var) {
 			vars.add(new Variable("p2", "POINTER TO BYTE"));
@@ -480,27 +470,13 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 
 		final List<String> instructions = new ArrayList<>();
 		bodyNode.put("instructions", instructions);
-		instructions.add("IF Handle.BufferWritePointer >= Handle.BufferReadPointer THEN");
-		instructions.add(TAB + "full := Handle.BufferSize - (Handle.BufferWritePointer - Handle.BufferReadPointer) < " + length + ";");
-		instructions.add("ELSE");
-		instructions.add(TAB + "full := Handle.BufferReadPointer - Handle.BufferWritePointer < " + length + ";");
-		instructions.add("END_IF");
+		instructions.add("i := GetNextWritePointer(" + length + ", Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);");
+		instructions.add("IF i >= 0 THEN");
 		instructions.add("");
-		instructions.add("IF NOT full THEN");
+		instructions.add(TAB + "p1 := Handle.BufferAddress + i;");
 		instructions.add("");
-		instructions.add(TAB + "start := Handle.BufferAddress;");
-		instructions.add(TAB + "end := Handle.BufferEndAddress;");
-		instructions.add(TAB + "p1 := start + Handle.BufferWritePointer;");
-		instructions.add("");
-		instructions.add(TAB + "IF p1 + " + length + " < end THEN");
-		instructions.add("");
-		instructions.addAll(instructions1);
-		instructions.add(TAB + "ELSE");
-		instructions.add("");
-		instructions.addAll(instructions2);
-		instructions.add(TAB + "END_IF");
-		instructions.add("");
-		instructions.add(TAB + "Handle.BufferWritePointer := DWORD_TO_DINT(p1 - start);");
+		instructions.addAll(evtInstructions);
+		instructions.add(TAB + "Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);");
 		instructions.add("");
 		instructions.add("END_IF");
 
@@ -508,53 +484,44 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 
 	}
 
-	private void addEvtP1Instruction(List<String> instructions1, List<String> instructions2, String p1Instruction) {
-		addEvtP1Instruction(instructions1, instructions2, p1Instruction, 1);
+	private void addEvtP1Instruction(List<String> instructions, String p1Instruction) {
+		addEvtP1Instruction(instructions, p1Instruction, 1);
 	}
 
-	private void addEvtP1Instruction(List<String> instructions1, List<String> instructions2, String p1Instruction, int p1Step) {
-
-		if (instructions1 != null) {
-			instructions1.add(TABTAB + "p1 := p1 + " + p1Step + ";");
-			instructions1.add(TABTAB + "p1^ := " + p1Instruction + ";");
-			instructions1.add("");			
+	private void addEvtP1Instruction(List<String> instructions, String p1Instruction, int p1Step) {
+		if (p1Step > 0) {
+			instructions.add(TAB + "p1 := p1 + " + p1Step + ";");
 		}
-
-		instructions2.add(TABTAB + "IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF");
-		instructions2.add(TABTAB + "p1^ := " + p1Instruction + ";");
-		instructions2.add("");
-
+		instructions.add(TAB + "p1^ := " + p1Instruction + ";");
+		instructions.add("");			
 	}
 
-	private void addEvtP2Instruction(List<String> instructions1, List<String> instructions2, String p2Instruction) {
-		addEvtP2Instruction(instructions1, instructions2, p2Instruction, 1);
+	private void addEvtP2Instruction(List<String> instructions, String p2Instruction) {
+		addEvtP2Instruction(instructions, p2Instruction, 1);
 	}
 
-	private void addEvtP2Instruction(List<String> instructions1, List<String> instructions2, String p2Instruction, int p2Step) {
-
-		if (instructions1 != null) {
-			instructions1.add(TABTAB + "p1 := p1 + " + p2Step + ";");
-			instructions1.add(TABTAB + "p2 := " + p2Instruction + ";");
-			instructions1.add(TABTAB + "p1^ := p2^;");
-			instructions1.add("");
+	private void addEvtP2Instruction(List<String> instructions, String p2Instruction, int p2Step) {
+		if (p2Step > 0) {
+			instructions.add(TAB + "p1 := p1 + " + p2Step + ";");
 		}
-
-		instructions2.add(TABTAB + "IF p1 < end THEN p1 := p1 + 1; ELSE p1 := start; END_IF");
-		instructions2.add(TABTAB + "p2 := " + p2Instruction + ";");
-		instructions2.add(TABTAB + "p1^ := p2^;");
-		instructions2.add("");
-
+		instructions.add(TAB + "p2 := " + p2Instruction + ";");
+		instructions.add(TAB + "p1^ := p2^;");
+		instructions.add("");
 	}
 
 	private void addEvtP3Instruction(List<String> instructions, String p3Instruction, int p1Step) {
-		instructions.add(TABTAB + "p3 := p1 + " + p1Step + ";");
-		instructions.add(TABTAB + "p3^ := " + p3Instruction + ";");
+		if (p1Step > 0) {
+			instructions.add(TAB + "p3 := p1 + " + p1Step + ";");
+		}
+		instructions.add(TAB + "p3^ := " + p3Instruction + ";");
 		instructions.add("");
 	}
 
 	private void addEvtP4Instruction(List<String> instructions, String p4Instruction, int p1Step) {
-		instructions.add(TABTAB + "p4 := p1 + " + p1Step + ";");
-		instructions.add(TABTAB + "p4^ := " + p4Instruction + ";");
+		if (p1Step > 0) {
+			instructions.add(TAB + "p4 := p1 + " + p1Step + ";");
+		}
+		instructions.add(TAB + "p4^ := " + p4Instruction + ";");
 		instructions.add("");
 	}
 

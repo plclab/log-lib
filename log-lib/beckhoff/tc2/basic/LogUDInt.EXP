@@ -1,0 +1,27 @@
+
+(* @NESTEDCOMMENTS := 'No' *)
+(* @PATH := '\/basic' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION LogUDInt : BOOL
+VAR_INPUT
+    Group: BYTE;
+    Id: BYTE;
+    Channel: UINT;
+    Value: UDINT;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+IF Group > 0 OR Id > 0 THEN
+    IF Channel < 256 THEN
+        EvtGr8Id8Ch8Tick32UInt32(Group, Id, UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);
+    ELSE
+        EvtGr8Id8Ch16Tick32UInt32(Group, Id, Channel, GlobalTick, Value, GlobalLogBufferHandle);
+    END_IF
+ELSIF Channel < 256 THEN
+    EvtCh8Tick32UInt32(UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);
+ELSE
+    EvtCh16Tick32UInt32(Channel, GlobalTick, Value, GlobalLogBufferHandle);
+END_IF
+END_FUNCTION

@@ -76,7 +76,7 @@ public class Java extends LogLibImpl {
 
 			//Create Evt methods
 			Map<String, Object> method;
-			for (Constant constant : Constant.CORE_EVENTS) {
+			for (Constant constant : Constant.CORE_EVENTS_DEFAULT) {
 				method = templateFactory.getEvtMethod(constant.name());
 				if (method != null) {
 					methods.add(method);							

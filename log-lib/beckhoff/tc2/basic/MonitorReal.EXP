@@ -5,8 +5,10 @@
 (* @SYMFILEFLAGS := '2048' *)
 FUNCTION MonitorReal : BOOL
 VAR_INPUT
-    Value: REAL;
+    Group: BYTE;
+    Id: BYTE;
     Channel: UINT;
+    Value: REAL;
 END_VAR
 VAR_IN_OUT
     Data: REAL;
@@ -15,7 +17,13 @@ VAR
 END_VAR
 (* @END_DECLARATION := '0' *)
 IF Value <> Data THEN
-    IF Channel < 256 THEN
+    IF Group > 0 OR Id > 0 THEN
+        IF Channel < 256 THEN
+            EvtGr8Id8Ch8Tick32Real32(Group, Id, UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);
+        ELSE
+            EvtGr8Id8Ch16Tick32Real32(Group, Id, Channel, GlobalTick, Value, GlobalLogBufferHandle);
+        END_IF
+    ELSIF Channel < 256 THEN
         EvtCh8Tick32Real32(UINT_TO_BYTE(Channel), GlobalTick, Value, GlobalLogBufferHandle);
     ELSE
         EvtCh16Tick32Real32(Channel, GlobalTick, Value, GlobalLogBufferHandle);

@@ -83,9 +83,11 @@ public class SiemensS71200 extends LogLibImpl {
 			template.process(templateData.getModel(), logLibCoreOutputWriter);
 
 			//Create Evt functions
-			for (Constant constant : Constant.CORE_EVENTS) {
+			for (Constant constant : Constant.CORE_EVENTS_MIN) {
 				templateData = templateFactory.getEvtFunctionTemplateData(constant);
-				template.process(templateData.getModel(), logLibCoreOutputWriter);
+				if (templateData != null) {
+					template.process(templateData.getModel(), logLibCoreOutputWriter);					
+				}
 			}
 			
 		} catch (Exception e) {
