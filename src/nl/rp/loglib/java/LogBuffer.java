@@ -2,7 +2,7 @@ package nl.rp.loglib.java;
 
 import java.util.Arrays;
 
-public class LogBuffer  {
+public class LogBuffer {
 
     public static final int DEFAULT_CAPACITY = 4000;
     public static final byte START_FLAG = 121;

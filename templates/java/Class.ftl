@@ -6,7 +6,7 @@ import ${import};
 </#list>
 </#if>
 
-<#if class.modifiers?has_content><#list class.modifiers as modifier>${modifier} </#list></#if>class ${class.name} <#if class.extends??>extends ${class.extends}</#if> {
+<#if class.modifiers?has_content><#list class.modifiers as modifier>${modifier} </#list></#if>class ${class.name} <#if class.extends??>extends ${class.extends} </#if>{
     <#if class.constants?has_content>
 
     <#list class.constants as const>
