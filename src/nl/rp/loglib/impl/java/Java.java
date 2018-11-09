@@ -46,23 +46,40 @@ public class Java extends LogLibImpl {
 
 			final Map<String, Object> classNode = new HashMap<>();
 			templateData.addNode("class", classNode);
-
 			classNode.put("package", "nl.rp.loglib.java");
 			classNode.put("name", "LogBuffer");
 			classNode.put("modifiers", new String[] {"public"});
 			classNode.put("imports", new String[] {"java.util.Arrays"});
 
+			final ArrayList<Variable> constants = new ArrayList<>();
+			classNode.put("constants", constants);
+
 			final ArrayList<Variable> vars = new ArrayList<>();
 			classNode.put("vars", vars);
 
+			final ArrayList<Map<String, Object>> constructors = new ArrayList<>();
+			classNode.put("constructors", constructors);
+			
 			final ArrayList<Map<String, Object>> methods = new ArrayList<>();
 			classNode.put("methods", methods);
 
 			//Create constants
-			vars.addAll(templateFactory.getConstants());
+			constants.addAll(templateFactory.getConstants());
 
 			//Create buffer members
 			vars.addAll(templateFactory.getMembers());
+
+			//Create default constructor
+			constructors.add(templateFactory.getDefaultConstructor());
+
+			//Create getBufferWritePointer() method
+			methods.add(templateFactory.getGetBufferWritePointerMethod());
+
+			//Create getBufferReadPointer() method
+			methods.add(templateFactory.getGetBufferReadPointerMethod());
+
+			//Create getBufferOverflow() method
+			methods.add(templateFactory.getGetBufferOverflowMethod());
 
 			//Create getNextWritePointer() method
 			methods.add(templateFactory.getGetNextWritePointerMethod());

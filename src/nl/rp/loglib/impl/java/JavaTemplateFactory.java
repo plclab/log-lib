@@ -45,12 +45,14 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 		final String[] modifiers = new String[] {"public", "static", "final"};
 
-		final List<Variable> vars = new ArrayList<Variable>();
+		final List<Variable> constants = new ArrayList<Variable>();
+		constants.add(new Variable("DEFAULT_CAPACITY", "int", "4000", modifiers));
+
 		for (Constant constant : Constant.values()) {
-			vars.add(new Variable(constant.name(), "byte", "" + (byte)constant.getValue(), modifiers));
+			constants.add(new Variable(constant.name(), "byte", "" + (byte)constant.getValue(), modifiers));
 		}
 
-		return vars;
+		return constants;
 
 	}
 
@@ -59,9 +61,9 @@ public class JavaTemplateFactory extends TemplateFactory {
 		final String[] modifiers = new String[] {"private"};
 
 		final List<Variable> vars = new ArrayList<Variable>();
-		vars.add(new Variable("buffer", "byte[]", "new byte[4000]", modifiers));
-		vars.add(new Variable("bufferSize", "int", "4000", modifiers));
-		vars.add(new Variable("end", "int", "4000 - 1", modifiers));
+		vars.add(new Variable("buffer", "byte[]", "new byte[DEFAULT_CAPACITY]", modifiers));
+		vars.add(new Variable("bufferSize", "int", "DEFAULT_CAPACITY", modifiers));
+		//vars.add(new Variable("end", "int", "DEFAULT_CAPACITY - 1", modifiers)); //TODO
 		vars.add(new Variable("bufferWritePointer", "int", "0", modifiers));
 		vars.add(new Variable("bufferReadPointer", "int", "0", modifiers));
 		vars.add(new Variable("bufferOverflow", "int", "0", modifiers));
@@ -72,13 +74,71 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 	}
 
+	public Map<String, Object> getDefaultConstructor() {
+
+		final List<String> instructions = new ArrayList<String>();	
+		instructions.add("buffer = new byte[capacity];");
+		instructions.add("bufferSize = capacity;");
+		//instructions.add("end = capacity - 1;"); //TODO
+		instructions.add("bufferWritePointer = 0;");
+		instructions.add("bufferReadPointer = 0;");
+		instructions.add("bufferOverflow = 0;");
+		instructions.add("i = 0;");
+
+		//TODO: Initialize magic byte
+
+		final Map<String, Object> constructor = new HashMap<>();
+		constructor.put("modifiers", new String[] {"public"});
+		constructor.put("args", new Variable[] {new Variable("capacity", "int")});
+		constructor.put("instructions", instructions);
+
+		return constructor;
+
+	}
+
+	public Map<String, Object> getGetBufferWritePointerMethod() {
+
+		final Map<String, Object> method = new HashMap<>();
+		method.put("modifiers", new String[] {"public"});
+		method.put("returnType", "int");
+		method.put("name", "getBufferWritePointer");
+		method.put("instructions", new String[] {"return bufferWritePointer;"});
+
+		return method;
+
+	}
+
+	public Map<String, Object> getGetBufferReadPointerMethod() {
+
+		final Map<String, Object> method = new HashMap<>();
+		method.put("modifiers", new String[] {"public"});
+		method.put("returnType", "int");
+		method.put("name", "getBufferReadPointer");
+		method.put("instructions", new String[] {"return bufferReadPointer;"});
+
+		return method;
+
+	}
+
+	public Map<String, Object> getGetBufferOverflowMethod() {
+
+		final Map<String, Object> method = new HashMap<>();
+		method.put("modifiers", new String[] {"public"});
+		method.put("returnType", "int");
+		method.put("name", "getBufferOverflow");
+		method.put("instructions", new String[] {"return bufferOverflow;"});
+
+		return method;
+
+	}
+
 	public Map<String, Object> getGetNextWritePointerMethod() {
 
 		final List<String> instructions = new ArrayList<String>();	
 		instructions.add("i = -1;");
 		instructions.add("if (bufferWritePointer >= bufferReadPointer) {");
-		instructions.add(TAB + "if (bufferWritePointer + length >= end) {");
-		instructions.add(TABTAB + "if (bufferReadPointer >= length) {");
+		instructions.add(TAB + "if (bufferWritePointer + length >= bufferSize) {");
+		instructions.add(TABTAB + "if (bufferReadPointer >= length) {"); //TODO: Shouldn't it be >= length - 1 ???
 		instructions.add(TABTABTAB + "bufferOverflow = bufferWritePointer;");
 		instructions.add(TABTABTAB + "buffer[0] = " + Constant.START_FLAG.name() + ";");
 		instructions.add(TABTABTAB + "buffer[1] = magicByte;");
@@ -87,14 +147,14 @@ public class JavaTemplateFactory extends TemplateFactory {
 		instructions.add(TABTAB + "}");
 		instructions.add(TAB + "} else if (bufferSize - (bufferWritePointer - bufferReadPointer) >= length) {");
 		instructions.add(TABTAB + "i = bufferWritePointer + 1;");
-		instructions.add(TABTAB + "buffer[i] = " + Constant.START_FLAG.name() + ";");
-		instructions.add(TABTAB + "buffer[++i] = magicByte;");
+		instructions.add(TABTAB + "buffer[i++] = " + Constant.START_FLAG.name() + ";");
+		instructions.add(TABTAB + "buffer[i++] = magicByte;");
 		instructions.add(TABTAB + "return true;");
 		instructions.add(TAB + "}");
 		instructions.add("} else if (bufferReadPointer - bufferWritePointer >= length) {");
 		instructions.add(TAB + "i = bufferWritePointer + 1;");
-		instructions.add(TAB + "buffer[i] = " + Constant.START_FLAG.name() + ";");
-		instructions.add(TAB + "buffer[++i] = magicByte;");
+		instructions.add(TAB + "buffer[i++] = " + Constant.START_FLAG.name() + ";");
+		instructions.add(TAB + "buffer[i++] = magicByte;");
 		instructions.add(TAB + "return true;");
 		instructions.add("}");
 		instructions.add("return false;");
@@ -126,7 +186,7 @@ public class JavaTemplateFactory extends TemplateFactory {
 		return method;
 
 	}
-	
+
 	public Map<String, Object> getReadBytesMethod() {
 
 		final List<String> instructions = new ArrayList<String>();
@@ -169,7 +229,7 @@ public class JavaTemplateFactory extends TemplateFactory {
 		final List<Variable> args = new ArrayList<Variable>();	
 
 		final List<String> evtInstructions = new ArrayList<String>();
-		addEvtInstruction(evtInstructions, evtConstant, false);
+		addEvtInstruction(evtInstructions, evtConstant, false, false);
 
 		String fullName;
 		for (Key key : keys) {
@@ -309,10 +369,18 @@ public class JavaTemplateFactory extends TemplateFactory {
 	}
 
 	private void addEvtInstruction(List<String> instructions, String value, boolean withOverflow) {
-		if (withOverflow) {
-			instructions.add(TAB + "next(" + value + ");");
+		addEvtInstruction(instructions, value, true, withOverflow);
+	}
+
+	private void addEvtInstruction(List<String> instructions, String value, boolean increase, boolean withOverflow) {
+		if (increase) {
+			if (withOverflow) {
+				instructions.add(TAB + "next(" + value + ");");
+			} else {
+				instructions.add(TAB + "buffer[++i] = " + value + ";");
+			}
 		} else {
-			instructions.add(TAB + "buffer[++i] = " + value + ";");
+			instructions.add(TAB + "buffer[i] = " + value + ";");
 		}
 	}
 
