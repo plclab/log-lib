@@ -60,81 +60,99 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 		final List<Variable> vars = new ArrayList<Variable>();
 		vars.add(new Variable("buffer", "byte[]", "new byte[4000]", modifiers));
+		vars.add(new Variable("bufferSize", "int", "4000", modifiers));
+		vars.add(new Variable("end", "int", "4000 - 1", modifiers));
 		vars.add(new Variable("bufferWritePointer", "int", "0", modifiers));
 		vars.add(new Variable("bufferReadPointer", "int", "0", modifiers));
+		vars.add(new Variable("bufferOverflow", "int", "0", modifiers));
 		vars.add(new Variable("magicByte", "byte", Constant.MAGIC_BYTE_V1_LITTLE_ENDIAN.name(), modifiers));
 		vars.add(new Variable("i", "int", "0", modifiers));
-		vars.add(new Variable("last", "int", "4000 - 1", modifiers));
 
 		return vars;
 
 	}
 
-	public Map<String, Object> getBeginMethod() {
+	public Map<String, Object> getGetNextWritePointerMethod() {
 
 		final List<String> instructions = new ArrayList<String>();	
-		instructions.add("i = bufferWritePointer;");
-		addNextInstruction(instructions, Constant.START_FLAG.name(), true);
-		addNextInstruction(instructions, "magicByte", true);
-
-		final Map<String, Object> method = new HashMap<>();
-		method.put("modifiers", new String[] {"private"});
-		method.put("returnType", "void");
-		method.put("name", "begin");
-		method.put("instructions", instructions);
-
-		return method;
-
-	}
-
-	public Map<String, Object> getNextAMethod() {
-
-		final List<String> instructions = new ArrayList<String>();
-		instructions.add("i += 1;");
-		instructions.add("buffer[i] = value;");
-
-		final Map<String, Object> method = new HashMap<>();
-		method.put("modifiers", new String[] {"private"});
-		method.put("returnType", "void");
-		method.put("name", "nextA");
-		method.put("args", new Variable[] {new Variable("value", "byte")});
-		method.put("instructions", instructions);
-
-		return method;
-
-	}
-
-	public Map<String, Object> getNextBMethod() {
-
-		final List<String> instructions = new ArrayList<String>();
-		instructions.add("if (i == last) {");
-		instructions.add("    i = 0;");
-		instructions.add("} else {");
-		instructions.add("    i += 1;");
+		instructions.add("i = -1;");
+		instructions.add("if (bufferWritePointer >= bufferReadPointer) {");
+		instructions.add(TAB + "if (bufferWritePointer + length >= end) {");
+		instructions.add(TABTAB + "if (bufferReadPointer >= length) {");
+		instructions.add(TABTABTAB + "bufferOverflow = bufferWritePointer;");
+		instructions.add(TABTABTAB + "buffer[0] = " + Constant.START_FLAG.name() + ";");
+		instructions.add(TABTABTAB + "buffer[1] = magicByte;");
+		instructions.add(TABTABTAB + "i = 2;");
+		instructions.add(TABTABTAB + "return true;");
+		instructions.add(TABTAB + "}");
+		instructions.add(TAB + "} else if (bufferSize - (bufferWritePointer - bufferReadPointer) >= length) {");
+		instructions.add(TABTAB + "i = bufferWritePointer + 1;");
+		instructions.add(TABTAB + "buffer[i] = " + Constant.START_FLAG.name() + ";");
+		instructions.add(TABTAB + "buffer[++i] = magicByte;");
+		instructions.add(TABTAB + "return true;");
+		instructions.add(TAB + "}");
+		instructions.add("} else if (bufferReadPointer - bufferWritePointer >= length) {");
+		instructions.add(TAB + "i = bufferWritePointer + 1;");
+		instructions.add(TAB + "buffer[i] = " + Constant.START_FLAG.name() + ";");
+		instructions.add(TAB + "buffer[++i] = magicByte;");
+		instructions.add(TAB + "return true;");
 		instructions.add("}");
-		instructions.add("buffer[i] = value;");
+		instructions.add("return false;");
 
 		final Map<String, Object> method = new HashMap<>();
 		method.put("modifiers", new String[] {"private"});
-		method.put("returnType", "void");
-		method.put("name", "nextB");
-		method.put("args", new Variable[] {new Variable("value", "byte")});
+		method.put("returnType", "boolean");
+		method.put("name", "getNextWritePointer");
+		method.put("args", new Variable[] {new Variable("length", "int")});
 		method.put("instructions", instructions);
 
 		return method;
 
 	}
 
-	public Map<String, Object> getEndMethod() {
+	public Map<String, Object> getNextMethod() {
 
-		final List<String> instructions = new ArrayList<String>();	
-		addNextInstruction(instructions, Constant.END_FLAG.name(), true);
-		instructions.add("bufferWritePointer = i;");
+		final List<String> instructions = new ArrayList<String>();
+		instructions.add("i = (i == end)? 0 : i + 1;");
+		instructions.add("buffer[i] = value;");
 
 		final Map<String, Object> method = new HashMap<>();
 		method.put("modifiers", new String[] {"private"});
 		method.put("returnType", "void");
-		method.put("name", "end");
+		method.put("name", "next");
+		method.put("args", new Variable[] {new Variable("value", "byte")});
+		method.put("instructions", instructions);
+
+		return method;
+
+	}
+	
+	public Map<String, Object> getReadBytesMethod() {
+
+		final List<String> instructions = new ArrayList<String>();
+		instructions.add("if (bufferWritePointer > bufferReadPointer) {");
+		instructions.add(TAB + "final byte[] bytes = Arrays.copyOfRange(buffer, bufferReadPointer + 1, bufferWritePointer + 1);");
+		instructions.add(TAB + "bufferReadPointer = bufferWritePointer;");
+		instructions.add(TAB + "return bytes;");
+		instructions.add("} else if (bufferWritePointer < bufferReadPointer) {");
+		instructions.add(TAB + "if (bufferReadPointer < bufferOverflow) {");
+		instructions.add(TABTAB + "final byte[] bytes = Arrays.copyOfRange(buffer, bufferReadPointer + 1, bufferOverflow + 1);");
+		instructions.add(TABTAB + "bufferReadPointer = bufferOverflow;");
+		instructions.add(TABTAB + "return bytes;");
+		instructions.add(TAB + "} else if (bufferWritePointer > 0) {");
+		instructions.add(TABTAB + "final byte[] bytes = Arrays.copyOfRange(buffer, 0, bufferWritePointer + 1);");
+		instructions.add(TABTAB + "bufferReadPointer = bufferWritePointer;");
+		instructions.add(TABTAB + "return bytes;");
+		instructions.add(TAB + "} else {");
+		instructions.add(TABTAB + "return null;");
+		instructions.add(TAB + "}");
+		instructions.add("} else {");
+		instructions.add(TAB + "return null;");
+		instructions.add("}");
+		final Map<String, Object> method = new HashMap<>();
+		method.put("modifiers", new String[] {"public"});
+		method.put("returnType", "byte[]");
+		method.put("name", "readBytes");
 		method.put("instructions", instructions);
 
 		return method;
@@ -146,12 +164,12 @@ public class JavaTemplateFactory extends TemplateFactory {
 		String methodName = "";
 
 		final Key[] keys = Key.stringToKeys(evtConstant);
+		final int length = Key.getDataLength(keys) + 4;
 
 		final List<Variable> args = new ArrayList<Variable>();	
 
-		final List<String> instructions = new ArrayList<String>();	
-		instructions.add("begin();");
-		addNextInstruction(instructions, evtConstant, true);
+		final List<String> evtInstructions = new ArrayList<String>();
+		addEvtInstruction(evtInstructions, evtConstant, false);
 
 		String fullName;
 		for (Key key : keys) {
@@ -175,66 +193,66 @@ public class JavaTemplateFactory extends TemplateFactory {
 			case GR8:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addNextInstruction(instructions, fullName, true);
+				addEvtInstruction(evtInstructions, fullName, false);
 				break;
 
 			case GR16:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addNextInstruction(instructions, fullName, true, 0);
-				addNextInstruction(instructions, fullName, true, 1);
+				addEvtInstruction(evtInstructions, fullName, false, 0);
+				addEvtInstruction(evtInstructions, fullName, false, 1);
 				break;
 
 			case ID8:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addNextInstruction(instructions, fullName, true);
+				addEvtInstruction(evtInstructions, fullName, false);
 				break;
 
 			case ID16:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addNextInstruction(instructions, fullName, true, 0);
-				addNextInstruction(instructions, fullName, true, 1);
+				addEvtInstruction(evtInstructions, fullName, false, 0);
+				addEvtInstruction(evtInstructions, fullName, false, 1);
 				break;
 
 			case CH8:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addNextInstruction(instructions, fullName, true);
+				addEvtInstruction(evtInstructions, fullName, false);
 				break;
 
 			case CH16:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addNextInstruction(instructions, fullName, true, 0);
-				addNextInstruction(instructions, fullName, true, 1);
+				addEvtInstruction(evtInstructions, fullName, false, 0);
+				addEvtInstruction(evtInstructions, fullName, false, 1);
 				break;
 
 			case BOOL8:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addNextInstruction(instructions, "(byte)(" + fullName + "? 1:0)", true);
+				addEvtInstruction(evtInstructions, "(byte)(" + fullName + "? 1:0)", false);
 				break;
 
 			case INT8:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addNextInstruction(instructions, fullName, true);
+				addEvtInstruction(evtInstructions, fullName, false);
 				break;
 
 			case UINT8:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addNextInstruction(instructions, fullName, true);
+				addEvtInstruction(evtInstructions, fullName, false);
 				break;
 
 			case INT16:
 			case UINT16:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addNextInstruction(instructions, fullName, true, 0);
-				addNextInstruction(instructions, fullName, true, 1);
+				addEvtInstruction(evtInstructions, fullName, false, 0);
+				addEvtInstruction(evtInstructions, fullName, false, 1);
 				break;
 
 			case TICK32:
@@ -242,10 +260,10 @@ public class JavaTemplateFactory extends TemplateFactory {
 			case UINT32:
 				methodName += key.shortName;
 				args.add(new Variable(fullName, getDataType(key.dataType)));
-				addNextInstruction(instructions, fullName, true, 0);
-				addNextInstruction(instructions, fullName, true, 1);
-				addNextInstruction(instructions, fullName, true, 2);
-				addNextInstruction(instructions, fullName, true, 3);
+				addEvtInstruction(evtInstructions, fullName, false, 0);
+				addEvtInstruction(evtInstructions, fullName, false, 1);
+				addEvtInstruction(evtInstructions, fullName, false, 2);
+				addEvtInstruction(evtInstructions, fullName, false, 3);
 				break;
 
 			case REAL32:
@@ -271,28 +289,46 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 		}
 
-		instructions.add("end();");
+		addEvtInstruction(evtInstructions, Constant.END_FLAG.name(), false);
+		evtInstructions.add(TAB + "bufferWritePointer = i;");
 
 		final Map<String, Object> method = new HashMap<>();
 		method.put("modifiers", new String[] {"protected"});
 		method.put("returnType", "void");
 		method.put("name", methodName);
 		method.put("args", args);
+
+		final List<String> instructions = new ArrayList<>();
 		method.put("instructions", instructions);
+		instructions.add("if (getNextWritePointer(" + length + ")) {");
+		instructions.addAll(evtInstructions);
+		instructions.add("}");
 
 		return method;
 
 	}
 
-	private void addNextInstruction(List<String> instructions, String value, boolean withOverflow) {
-		instructions.add("next" + (withOverflow? "B":"A") + "(" + value + ");");
+	private void addEvtInstruction(List<String> instructions, String value, boolean withOverflow) {
+		if (withOverflow) {
+			instructions.add(TAB + "next(" + value + ");");
+		} else {
+			instructions.add(TAB + "buffer[++i] = " + value + ";");
+		}
 	}
 
-	private void addNextInstruction(List<String> instructions, String value, boolean withOverflow, int byteIndex) {
+	private void addEvtInstruction(List<String> instructions, String value, boolean withOverflow, int byteIndex) {
 		if (byteIndex > 0) {
-			instructions.add("next" + (withOverflow? "B":"A") + "((byte)((" + value + " >> " + (byteIndex * 8) + ") & 0xff));");
+			if (withOverflow) {
+				instructions.add(TAB + "next((byte)((" + value + " >> " + (byteIndex * 8) + ") & 0xff));");
+			} else {
+				instructions.add(TAB + "buffer[++i] = (byte)((" + value + " >> " + (byteIndex * 8) + ") & 0xff);");
+			}
 		} else {
-			instructions.add("next" + (withOverflow? "B":"A") + "((byte)(" + value + " & 0xff));");
+			if (withOverflow) {
+				instructions.add(TAB + "next((byte)(" + value + " & 0xff));");
+			} else {
+				instructions.add(TAB + "buffer[++i] = (byte)(" + value + " & 0xff);");
+			}
 		}
 	}
 

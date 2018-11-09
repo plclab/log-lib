@@ -10,6 +10,7 @@ import nl.rp.loglib.impl.LogLibImpl;
 import nl.rp.loglib.impl.bachmann.mplc.BachmannMPlc;
 import nl.rp.loglib.impl.beckhoff.tc2.BeckhoffTc2;
 import nl.rp.loglib.impl.codesys.v2.CoDeSysV2;
+import nl.rp.loglib.impl.java.Java;
 import nl.rp.loglib.impl.siemens.s71200.SiemensS71200;
 
 public class LogLibTemplateTests {
@@ -49,9 +50,6 @@ public class LogLibTemplateTests {
 			/*
 			logLibImpl = new CoDeSysV3();
 			logLibImpl.generate(configuration);
-
-			logLibImpl = new Java();
-			logLibImpl.generate(configuration);
 			*/
 
 			logLibImpl = new CoDeSysV2();
@@ -64,6 +62,9 @@ public class LogLibTemplateTests {
 			logLibImpl.generate(configuration);
 
 			logLibImpl = new SiemensS71200();
+			logLibImpl.generate(configuration);
+
+			logLibImpl = new Java();
 			logLibImpl.generate(configuration);
 
 			printByteOrders();
