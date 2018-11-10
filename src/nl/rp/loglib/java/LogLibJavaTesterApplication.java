@@ -14,6 +14,9 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -26,9 +29,11 @@ import nl.rp.loglib.Key;
 public class LogLibJavaTesterApplication {
 
 	public static final int UI_REFRESH_INTERVAL = 250;
+	public static final int PORT = 5000;
 
 	private final JFrame frame;
-	private final LogLibJavaTester tester;
+	private final LogLibTestServer testServer;
+	private final LogLibTestClient testClient;
 
 
 	public LogLibJavaTesterApplication() {
@@ -38,7 +43,24 @@ public class LogLibJavaTesterApplication {
 		frame.setTitle("log-lib-Java Test Application");
 		frame.setSize(1000, 800);
 
-		tester = new LogLibJavaTester(100);
+		testServer = new LogLibTestServer(PORT, 100);
+		testClient = new LogLibTestClient(PORT);
+
+		final JMenuBar menuBar = new JMenuBar();
+		frame.setJMenuBar(menuBar);
+
+		final JMenu fileMenu = new JMenu("File");
+		menuBar.add(fileMenu);
+
+		final JMenuItem exitMenuItem = new JMenuItem("Exit");
+		fileMenu.add(exitMenuItem);
+		exitMenuItem.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				exit();
+			}
+		});
 
 		final JPanel contentPanel = new JPanel();
 		frame.getContentPane().add(contentPanel);
@@ -67,7 +89,7 @@ public class LogLibJavaTesterApplication {
 
 				final Object selectedConstant = evtComboBox.getSelectedItem();
 				if (selectedConstant != null && selectedConstant instanceof Constant) {
-					tester.createEvent((Constant)selectedConstant);
+					testServer.createEvent((Constant)selectedConstant);
 				}
 
 			}
@@ -90,9 +112,9 @@ public class LogLibJavaTesterApplication {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				bufferWritePointerLabel.setText("  Buffer write pointer: " + tester.getLogBuffer().getBufferWritePointer());
-				bufferReadPointerLabel.setText("  Buffer read pointer: " + tester.getLogBuffer().getBufferReadPointer());
-				bufferOverflowLabel.setText("  Buffer overflow: " + tester.getLogBuffer().getBufferOverflow());
+				bufferWritePointerLabel.setText("  Buffer write pointer: " + testServer.getLogBuffer().getBufferWritePointer());
+				bufferReadPointerLabel.setText("  Buffer read pointer: " + testServer.getLogBuffer().getBufferReadPointer());
+				bufferOverflowLabel.setText("  Buffer overflow: " + testServer.getLogBuffer().getBufferOverflow());
 
 			}
 		}).start();
@@ -101,13 +123,21 @@ public class LogLibJavaTesterApplication {
 
 			@Override
 			public void windowClosing(WindowEvent e) {
-				tester.exit();
-				System.exit(0);
+				exit();
 			}
 		});
 
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
+
+	}
+
+	private void exit() {
+
+		testClient.exit();
+		testServer.exit();
+
+		System.exit(0);
 
 	}
 
