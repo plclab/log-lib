@@ -46,7 +46,7 @@ public class JavaTemplateFactory extends TemplateFactory {
 		final String[] modifiers = new String[] {"public", "static", "final"};
 
 		final List<Variable> constants = new ArrayList<Variable>();
-		constants.add(new Variable("DEFAULT_CAPACITY", "int", "4000", modifiers));
+		constants.add(new Variable("DEFAULT_BUFFER_LENGTH", "int", "4000", modifiers));
 
 		for (Constant constant : Constant.values()) {
 			constants.add(new Variable(constant.name(), "byte", "" + (byte)constant.getValue(), modifiers));
@@ -61,9 +61,9 @@ public class JavaTemplateFactory extends TemplateFactory {
 		final String[] modifiers = new String[] {"private"};
 
 		final List<Variable> vars = new ArrayList<Variable>();
-		vars.add(new Variable("buffer", "byte[]", "new byte[DEFAULT_CAPACITY]", modifiers));
-		vars.add(new Variable("bufferSize", "int", "DEFAULT_CAPACITY", modifiers));
-		//vars.add(new Variable("end", "int", "DEFAULT_CAPACITY - 1", modifiers)); //TODO
+		vars.add(new Variable("buffer", "byte[]", "new byte[DEFAULT_BUFFER_LENGTH]", modifiers));
+		vars.add(new Variable("bufferLength", "int", "DEFAULT_BUFFER_LENGTH", modifiers));
+		//vars.add(new Variable("end", "int", "DEFAULT_BUFFER_LENGTH - 1", modifiers)); //TODO
 		vars.add(new Variable("bufferWritePointer", "int", "0", modifiers));
 		vars.add(new Variable("bufferReadPointer", "int", "0", modifiers));
 		vars.add(new Variable("bufferOverflow", "int", "0", modifiers));
@@ -77,9 +77,9 @@ public class JavaTemplateFactory extends TemplateFactory {
 	public Map<String, Object> getDefaultConstructor() {
 
 		final List<String> instructions = new ArrayList<String>();	
-		instructions.add("buffer = new byte[capacity];");
-		instructions.add("bufferSize = capacity;");
-		//instructions.add("end = capacity - 1;"); //TODO
+		instructions.add("buffer = new byte[length];");
+		instructions.add("bufferLength = length;");
+		//instructions.add("end = length - 1;"); //TODO
 		instructions.add("bufferWritePointer = 0;");
 		instructions.add("bufferReadPointer = 0;");
 		instructions.add("bufferOverflow = 0;");
@@ -89,10 +89,22 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 		final Map<String, Object> constructor = new HashMap<>();
 		constructor.put("modifiers", new String[] {"public"});
-		constructor.put("args", new Variable[] {new Variable("capacity", "int")});
+		constructor.put("args", new Variable[] {new Variable("length", "int")});
 		constructor.put("instructions", instructions);
 
 		return constructor;
+
+	}
+
+	public Map<String, Object> getGetBufferLengthMethod() {
+
+		final Map<String, Object> method = new HashMap<>();
+		method.put("modifiers", new String[] {"public"});
+		method.put("returnType", "int");
+		method.put("name", "getBufferLength");
+		method.put("instructions", new String[] {"return bufferLength;"});
+
+		return method;
 
 	}
 
@@ -137,7 +149,7 @@ public class JavaTemplateFactory extends TemplateFactory {
 		final List<String> instructions = new ArrayList<String>();	
 		instructions.add("i = -1;");
 		instructions.add("if (bufferWritePointer >= bufferReadPointer) {");
-		instructions.add(TAB + "if (bufferWritePointer + length >= bufferSize) {");
+		instructions.add(TAB + "if (bufferWritePointer + length >= bufferLength) {");
 		instructions.add(TABTAB + "if (bufferReadPointer >= length) {"); //TODO: Shouldn't it be >= length - 1 ???
 		instructions.add(TABTABTAB + "bufferOverflow = bufferWritePointer;");
 		instructions.add(TABTABTAB + "buffer[0] = " + Constant.START_FLAG.name() + ";");
@@ -145,7 +157,7 @@ public class JavaTemplateFactory extends TemplateFactory {
 		instructions.add(TABTABTAB + "i = 2;");
 		instructions.add(TABTABTAB + "return true;");
 		instructions.add(TABTAB + "}");
-		instructions.add(TAB + "} else if (bufferSize - (bufferWritePointer - bufferReadPointer) >= length) {");
+		instructions.add(TAB + "} else if (bufferLength - (bufferWritePointer - bufferReadPointer) >= length) {");
 		instructions.add(TABTAB + "i = bufferWritePointer + 1;");
 		instructions.add(TABTAB + "buffer[i++] = " + Constant.START_FLAG.name() + ";");
 		instructions.add(TABTAB + "buffer[i++] = magicByte;");

@@ -59,7 +59,7 @@ public class Java extends LogLibImpl {
 
 			final ArrayList<Map<String, Object>> constructors = new ArrayList<>();
 			classNode.put("constructors", constructors);
-			
+
 			final ArrayList<Map<String, Object>> methods = new ArrayList<>();
 			classNode.put("methods", methods);
 
@@ -71,6 +71,9 @@ public class Java extends LogLibImpl {
 
 			//Create default constructor
 			constructors.add(templateFactory.getDefaultConstructor());
+
+			//Create getBufferLength() method
+			methods.add(templateFactory.getGetBufferLengthMethod());
 
 			//Create getBufferWritePointer() method
 			methods.add(templateFactory.getGetBufferWritePointerMethod());
@@ -96,7 +99,7 @@ public class Java extends LogLibImpl {
 					methods.add(method);							
 				}
 			}
-			
+
 			//Create readBytes() method
 			methods.add(templateFactory.getReadBytesMethod());
 

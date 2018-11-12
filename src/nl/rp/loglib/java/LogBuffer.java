@@ -4,11 +4,11 @@ import java.util.Arrays;
 
 public class LogBuffer {
 
-    public static final int DEFAULT_CAPACITY = 4000;
-    public static final byte START_FLAG = 121;
-    public static final byte MAGIC_BYTE_V1_LITTLE_ENDIAN = 122;
-    public static final byte MAGIC_BYTE_V1_BIG_ENDIAN = 124;
-    public static final byte END_FLAG = 123;
+    public static final int DEFAULT_BUFFER_LENGTH = 4000;
+    public static final byte START_FLAG = -1;
+    public static final byte MAGIC_BYTE_V1_LITTLE_ENDIAN = 112;
+    public static final byte MAGIC_BYTE_V1_BIG_ENDIAN = 113;
+    public static final byte END_FLAG = -2;
     public static final byte EVT_NULL = 0;
     public static final byte EVT_CH8_BOOL8 = 8;
     public static final byte EVT_CH8_INT8 = 9;
@@ -257,8 +257,8 @@ public class LogBuffer {
     public static final byte EVT_GR16_ID16_CH16_TICK64_STRING = -4;
     public static final byte EVT_GR16_ID16_CH16_TICK64_BYTES = -3;
 
-    private byte[] buffer = new byte[DEFAULT_CAPACITY];
-    private int bufferSize = DEFAULT_CAPACITY;
+    private byte[] buffer = new byte[DEFAULT_BUFFER_LENGTH];
+    private int bufferLength = DEFAULT_BUFFER_LENGTH;
     private int bufferWritePointer = 0;
     private int bufferReadPointer = 0;
     private int bufferOverflow = 0;
@@ -266,13 +266,17 @@ public class LogBuffer {
     private int i = 0;
     
 
-    public LogBuffer(int capacity) {
-        buffer = new byte[capacity];
-        bufferSize = capacity;
+    public LogBuffer(int length) {
+        buffer = new byte[length];
+        bufferLength = length;
         bufferWritePointer = 0;
         bufferReadPointer = 0;
         bufferOverflow = 0;
         i = 0;
+    }
+
+    public int getBufferLength() {
+        return bufferLength;
     }
 
     public int getBufferWritePointer() {
@@ -290,7 +294,7 @@ public class LogBuffer {
     private boolean getNextWritePointer(int length) {
         i = -1;
         if (bufferWritePointer >= bufferReadPointer) {
-            if (bufferWritePointer + length >= bufferSize) {
+            if (bufferWritePointer + length >= bufferLength) {
                 if (bufferReadPointer >= length) {
                     bufferOverflow = bufferWritePointer;
                     buffer[0] = START_FLAG;
@@ -298,7 +302,7 @@ public class LogBuffer {
                     i = 2;
                     return true;
                 }
-            } else if (bufferSize - (bufferWritePointer - bufferReadPointer) >= length) {
+            } else if (bufferLength - (bufferWritePointer - bufferReadPointer) >= length) {
                 i = bufferWritePointer + 1;
                 buffer[i++] = START_FLAG;
                 buffer[i++] = magicByte;

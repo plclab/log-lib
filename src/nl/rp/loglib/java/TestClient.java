@@ -4,8 +4,11 @@ import java.io.DataInputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
-public class LogLibTestClient {
+public class TestClient {
 
 	public static final int CONNECT_TIMEOUT = 1000;
 
@@ -31,10 +34,12 @@ public class LogLibTestClient {
 	private int expectedLengthIndex = 0;
 	private int expectedLength = 0;
 
+	private final List<TestClientListener> listeners = new ArrayList<>();
+	
 	private boolean exit = false;
 
 
-	public LogLibTestClient(int port) {
+	public TestClient(int port) {
 
 		this.port = port;
 
@@ -56,6 +61,20 @@ public class LogLibTestClient {
 
 	public void setSocketReadInterval(int socketReadInterval) {
 		this.socketReadInterval = socketReadInterval;
+	}
+	
+	public void addClientListener(TestClientListener listener) {
+		listeners.add(listener);
+	}
+	
+	public void removeClientListener(TestClientListener listener) {
+		listeners.remove(listener);
+	}
+	
+	private void firePacketReceived(Packet packet) {
+		for (TestClientListener listener : listeners) {
+			listener.packetReceived(packet);
+		}
 	}
 
 	public void exit() {
@@ -322,6 +341,20 @@ public class LogLibTestClient {
 
 		System.out.println("Packet received, length = " + expectedLength);
 
+		final Packet packet = new Packet();
+		
+		packet.setTime(new Date().getTime());
+		
+		//TODO: Read packet from bytes
+		
+		firePacketReceived(packet);
+		
+	}
+	
+	public interface TestClientListener {
+		
+		public void packetReceived(Packet packet);
+		
 	}
 
 }

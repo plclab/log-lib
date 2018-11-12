@@ -7,7 +7,7 @@ VERSION : 0.1
       BufferWritePointer : DInt := 0;
       BufferReadPointer : DInt := 0;
       BufferOverflow : DInt := -1;
-      MagicByte : Byte := 122;
+      MagicByte : Byte := 112;
    END_STRUCT;
 
 END_TYPE

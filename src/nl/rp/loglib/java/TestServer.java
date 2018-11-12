@@ -6,7 +6,7 @@ import java.net.Socket;
 
 import nl.rp.loglib.Constant;
 
-public class LogLibTestServer {
+public class TestServer {
 
 	private final int port;
 	private final LogBuffer logBuffer;
@@ -18,7 +18,7 @@ public class LogLibTestServer {
 	private boolean exit = false;
 
 
-	public LogLibTestServer(int port, int capacity) {
+	public TestServer(int port, int capacity) {
 
 		this.port = port;
 		logBuffer = new LogBuffer(capacity);

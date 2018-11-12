@@ -21,9 +21,9 @@ BEGIN
 	
 	#byteOrderInt := 1;
 	IF #byteOrderArray[0] = 1 THEN
-	    #Handle.MagicByte := 122;
+	    #Handle.MagicByte := 112;
 	ELSE
-	    #Handle.MagicByte := 124;
+	    #Handle.MagicByte := 113;
 	END_IF;
 END_FUNCTION
 
@@ -49,20 +49,20 @@ BEGIN
 	    IF #Handle.BufferWritePointer + #Length >= #Handle.BufferEnd THEN
 	        IF #Handle.BufferReadPointer >= #Length THEN
 	            #Handle.BufferOverflow := #Handle.BufferWritePointer;
-	            #Handle.Buffer[0] := 121;
+	            #Handle.Buffer[0] := 255;
 	            #Handle.Buffer[1] := #Handle.MagicByte;
 	            #i := 2;
 	        END_IF;
 	    ELSIF #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) >= #Length THEN
 	        #i := #Handle.BufferWritePointer + 1;
-	        #Handle.Buffer[#i] := 121;
+	        #Handle.Buffer[#i] := 255;
 	        #i := #i + 1;
 	        #Handle.Buffer[#i] := #Handle.MagicByte;
 	        #i := #i + 1;
 	    END_IF;
 	ELSIF #Handle.BufferReadPointer - #Handle.BufferWritePointer >= #Length THEN
 	    #i := #Handle.BufferWritePointer + 1;
-	    #Handle.Buffer[#i] := 121;
+	    #Handle.Buffer[#i] := 255;
 	    #i := #i + 1;
 	    #Handle.Buffer[#i] := #Handle.MagicByte;
 	    #i := #i + 1;
@@ -89,7 +89,7 @@ BEGIN
 	    #Handle.Buffer[#i] := 0;
 	
 	    #i := #i + 1;
-	    #Handle.Buffer[#i] := 123;
+	    #Handle.Buffer[#i] := 254;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -150,7 +150,7 @@ BEGIN
 	    #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
 	
 	    #i := #i + 1;
-	    #Handle.Buffer[#i] := 123;
+	    #Handle.Buffer[#i] := 254;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -224,7 +224,7 @@ BEGIN
 	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
 	    #i := #i + 1;
-	    #Handle.Buffer[#i] := 123;
+	    #Handle.Buffer[#i] := 254;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -298,7 +298,7 @@ BEGIN
 	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
 	    #i := #i + 1;
-	    #Handle.Buffer[#i] := 123;
+	    #Handle.Buffer[#i] := 254;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -367,7 +367,7 @@ BEGIN
 	    #Handle.Buffer[#i] := BOOL_TO_BYTE(#Value);
 	
 	    #i := #i + 1;
-	    #Handle.Buffer[#i] := 123;
+	    #Handle.Buffer[#i] := 254;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -449,7 +449,7 @@ BEGIN
 	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
 	    #i := #i + 1;
-	    #Handle.Buffer[#i] := 123;
+	    #Handle.Buffer[#i] := 254;
 	
 	    #Handle.BufferWritePointer := #i;
 	
@@ -531,7 +531,7 @@ BEGIN
 	    #Handle.Buffer[#i] := #p4Bytes[3];
 	
 	    #i := #i + 1;
-	    #Handle.Buffer[#i] := 123;
+	    #Handle.Buffer[#i] := 254;
 	
 	    #Handle.BufferWritePointer := #i;
 	
