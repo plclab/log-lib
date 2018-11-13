@@ -53,14 +53,14 @@ BEGIN
 	            #Handle.Buffer[1] := #Handle.MagicByte;
 	            #i := 2;
 	        END_IF;
-	    ELSIF #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) >= #Length THEN
+	    ELSE
 	        #i := #Handle.BufferWritePointer + 1;
 	        #Handle.Buffer[#i] := 255;
 	        #i := #i + 1;
 	        #Handle.Buffer[#i] := #Handle.MagicByte;
 	        #i := #i + 1;
 	    END_IF;
-	ELSIF #Handle.BufferReadPointer - #Handle.BufferWritePointer >= #Length THEN
+	ELSIF #Handle.BufferReadPointer - #Handle.BufferWritePointer > #Length THEN
 	    #i := #Handle.BufferWritePointer + 1;
 	    #Handle.Buffer[#i] := 255;
 	    #i := #i + 1;

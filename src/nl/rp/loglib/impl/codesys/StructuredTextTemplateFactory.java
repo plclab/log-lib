@@ -265,10 +265,10 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		instructions.add(TABTABTAB + "BufferOverflow := WritePointer;");
 		instructions.add(TABTABTAB + "GetNextWritePointer := 0;");
 		instructions.add(TABTAB + "END_IF");
-		instructions.add(TAB + "ELSIF BufferSize - (WritePointer - ReadPointer) >= Length THEN");
+		instructions.add(TAB + "ELSE");
 		instructions.add(TABTAB + "GetNextWritePointer := WritePointer + 1;");
 		instructions.add(TAB + "END_IF");
-		instructions.add("ELSIF ReadPointer - WritePointer >= Length THEN");
+		instructions.add("ELSIF ReadPointer - WritePointer > Length THEN");
 		instructions.add(TAB + "GetNextWritePointer := WritePointer + 1;");
 		instructions.add("END_IF");
 

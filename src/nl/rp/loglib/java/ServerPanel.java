@@ -16,9 +16,13 @@ import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import nl.rp.loglib.Constant;
 import nl.rp.loglib.Key;
+import nl.rp.loglib.java.TestServer.TestServerListener;
 
 @SuppressWarnings("serial")
 public class ServerPanel extends JPanel {
@@ -29,6 +33,7 @@ public class ServerPanel extends JPanel {
 	private final JSpinner sendIntervalSpinner;
 	private final JButton startButton;
 	private final JButton stopButton;
+	private final JLabel serverStatusLabel;
 	private final EventPanel eventPanel;
 	private final LogBufferPanel logBufferPanel;
 
@@ -46,18 +51,47 @@ public class ServerPanel extends JPanel {
 		setLayout(layout);
 
 		portSpinner = new JSpinner(new SpinnerNumberModel(5000, 0, 65535, 1));
+		portSpinner.setEditor(new JSpinner.NumberEditor(portSpinner, "#"));
 		add(createLabel("Port"), new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 4, 0, 0), 0, 0));
 		add(portSpinner, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 4, 0, 0), 0, 0));
 
 		sendIntervalSpinner = new JSpinner(new SpinnerNumberModel(1000, 1, 60000, 1));
+		sendIntervalSpinner.setEditor(new JSpinner.NumberEditor(sendIntervalSpinner, "#"));
 		add(createLabel("Send interval (ms)"), new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		add(sendIntervalSpinner, new GridBagConstraints(3, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		sendIntervalSpinner.addChangeListener(new ChangeListener() {
+
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				testServer.setBufferReadInterval((int)sendIntervalSpinner.getValue());
+			}
+		});
 
 		startButton = new JButton("Start");
 		add(startButton, new GridBagConstraints(5, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		startButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				startButton.setEnabled(false);
+				testServer.start();
+			}
+		});
 
 		stopButton = new JButton("Stop");
+		stopButton.setEnabled(false);
 		add(stopButton, new GridBagConstraints(7, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		stopButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				stopButton.setEnabled(false);
+				testServer.stop();
+			}
+		});
+
+		serverStatusLabel = new JLabel();
+		add(serverStatusLabel, new GridBagConstraints(9, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 3, 0, 0), 0, 0));
 
 		eventPanel = new EventPanel();
 		eventPanel.setBorder(BorderFactory.createTitledBorder("Event"));
@@ -66,6 +100,56 @@ public class ServerPanel extends JPanel {
 		logBufferPanel = new LogBufferPanel(testServer.getLogBuffer());
 		logBufferPanel.setBorder(BorderFactory.createTitledBorder("Buffer"));
 		add(logBufferPanel, new GridBagConstraints(1, 9, 11, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+
+		testServer.addServerListener(new TestServerListener() {
+
+			@Override
+			public void started() {
+				SwingUtilities.invokeLater(new Runnable() {
+
+					@Override
+					public void run() {
+						stopButton.setEnabled(true);
+						serverStatusLabel.setText("Started");
+					}
+				});
+			}
+
+			@Override
+			public void clientConnected() {
+				SwingUtilities.invokeLater(new Runnable() {
+
+					@Override
+					public void run() {
+						serverStatusLabel.setText("Connected");
+					}
+				});
+			}
+
+			@Override
+			public void clientDisconnected() {
+				SwingUtilities.invokeLater(new Runnable() {
+
+					@Override
+					public void run() {
+						serverStatusLabel.setText("Disconnected");
+					}
+				});
+			}
+
+			@Override
+			public void stopped() {
+				SwingUtilities.invokeLater(new Runnable() {
+
+					@Override
+					public void run() {
+						startButton.setEnabled(true);
+						stopButton.setEnabled(false);
+						serverStatusLabel.setText("Stopped");
+					}
+				});
+			}
+		});
 
 		eventPanel.evtComboBox.setSelectedIndex(0);
 

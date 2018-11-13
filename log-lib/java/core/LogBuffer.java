@@ -302,13 +302,13 @@ public class LogBuffer {
                     i = 2;
                     return true;
                 }
-            } else if (bufferLength - (bufferWritePointer - bufferReadPointer) >= length) {
+            } else {
                 i = bufferWritePointer + 1;
                 buffer[i++] = START_FLAG;
                 buffer[i++] = magicByte;
                 return true;
             }
-        } else if (bufferReadPointer - bufferWritePointer >= length) {
+        } else if (bufferReadPointer - bufferWritePointer > length) {
             i = bufferWritePointer + 1;
             buffer[i++] = START_FLAG;
             buffer[i++] = magicByte;

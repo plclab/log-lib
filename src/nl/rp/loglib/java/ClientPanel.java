@@ -4,6 +4,11 @@ import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -44,9 +49,11 @@ public class ClientPanel extends JPanel {
 	private final JSpinner readIntervalSpinner;
 	private final JButton connectButton;
 	private final JButton disconnectButton;
-	
+	private final JLabel clientStatusLabel;
+
 	private final PacketsTableModel packetsTableModel;
 	private final JTable packetsTable;
+	private final JScrollPane packetsTableScrollPane;
 
 
 	public ClientPanel(LogLibJavaTesterApplication context) {
@@ -64,28 +71,50 @@ public class ClientPanel extends JPanel {
 		ipTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 		add(createLabel("Remote ip"), new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		add(ipTextField, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-		
+
 		portSpinner = new JSpinner(new SpinnerNumberModel(5000, 0, 65535, 1));
+		portSpinner.setEditor(new JSpinner.NumberEditor(portSpinner, "#"));
 		add(createLabel("Port"), new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		add(portSpinner, new GridBagConstraints(3, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 
 		readIntervalSpinner = new JSpinner(new SpinnerNumberModel(1000, 1, 60000, 1));
+		readIntervalSpinner.setEditor(new JSpinner.NumberEditor(readIntervalSpinner, "#"));
 		add(createLabel("Read interval (ms)"), new GridBagConstraints(5, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		add(readIntervalSpinner, new GridBagConstraints(5, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		readIntervalSpinner.addChangeListener(new ChangeListener() {
-			
+
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				testClient.setSocketReadInterval((int)readIntervalSpinner.getValue());
 			}
 		});
-		
+
 		connectButton = new JButton("Connect");
 		add(connectButton, new GridBagConstraints(7, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		connectButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				connectButton.setEnabled(false);
+				testClient.start();
+			}
+		});
 
 		disconnectButton = new JButton("Disconnect");
+		disconnectButton.setEnabled(false);
 		add(disconnectButton, new GridBagConstraints(9, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-		
+		disconnectButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				disconnectButton.setEnabled(false);
+				testClient.stop();
+			}
+		});
+
+		clientStatusLabel = new JLabel();
+		add(clientStatusLabel, new GridBagConstraints(11, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 3, 0, 0), 0, 0));
+
 		packetsTableModel = new PacketsTableModel();
 
 		packetsTable = new JTable(packetsTableModel);
@@ -99,10 +128,43 @@ public class ClientPanel extends JPanel {
 		packetsTable.getColumnModel().getColumn(COL_ID).setPreferredWidth(30);
 		packetsTable.getColumnModel().getColumn(COL_CHANNEL).setPreferredWidth(30);
 
-		final JScrollPane packetsTableScrollPane = new JScrollPane(packetsTable);
+		packetsTable.addKeyListener(new KeyAdapter() {
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ESCAPE && !packetsTable.isEditing()) {
+					packetsTable.clearSelection();
+				}
+			}
+		});
+
+		packetsTableScrollPane = new JScrollPane(packetsTable);
 		add(packetsTableScrollPane, new GridBagConstraints(1, 3, 11, 7, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 
 		testClient.addClientListener(new TestClientListener() {
+
+			@Override
+			public void started() {
+				SwingUtilities.invokeLater(new Runnable() {
+
+					@Override
+					public void run() {
+						disconnectButton.setEnabled(true);
+						clientStatusLabel.setText("Started");
+					}
+				});
+			}
+
+			@Override
+			public void connected() {
+				SwingUtilities.invokeLater(new Runnable() {
+
+					@Override
+					public void run() {
+						clientStatusLabel.setText("Connected");
+					}
+				});
+			}
 
 			@Override
 			public void packetReceived(Packet packet) {
@@ -110,22 +172,74 @@ public class ClientPanel extends JPanel {
 
 					@Override
 					public void run() {
+
 						final int oldSize = packets.size();
 						packets.add(packet);
 						packetsTableModel.fireTableRowsInserted(oldSize, packets.size() - 1);
+
+						if (packetsTable.getSelectedRowCount() == 0) {							
+							scrollPacketsTableToLastRow();
+						}
+
+					}
+				});
+			}
+
+			@Override
+			public void disconnected() {
+				SwingUtilities.invokeLater(new Runnable() {
+
+					@Override
+					public void run() {
+						clientStatusLabel.setText("Disconnected");
+					}
+				});
+			}
+
+			@Override
+			public void stopped() {
+				SwingUtilities.invokeLater(new Runnable() {
+
+					@Override
+					public void run() {
+						connectButton.setEnabled(true);
+						disconnectButton.setEnabled(false);
+						clientStatusLabel.setText("Stopped");
 					}
 				});
 			}
 		});
 
 	}
-	
+
 	private JLabel createLabel(String text) {
 		final JLabel label = new JLabel(text);
 		label.setFont(label.getFont().deriveFont(10.0f));
 		//label.setForeground(Color.darkGray);
 		label.setBorder(BorderFactory.createEmptyBorder(6, 1, 2, 0));
 		return label;
+	}
+
+	private void scrollPacketsTableToLastRow() {
+
+		SwingUtilities.invokeLater(new Runnable() {
+
+			@Override
+			public void run() {
+
+				final int lastRow = packetsTable.getRowCount() - 1;
+				if (lastRow >= 0) {
+
+					final Rectangle rect = packetsTable.getCellRect(lastRow, 0, false);
+					if (rect != null) {
+						packetsTableScrollPane.getViewport().setViewPosition(rect.getLocation());
+					}
+
+				}
+
+			}
+		});
+
 	}
 
 
@@ -188,13 +302,13 @@ public class ClientPanel extends JPanel {
 			setOpaque(true);
 			setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
 		}
-		
+
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 
 			setBackground(isSelected? table.getSelectionBackground() : table.getBackground());
 			setForeground(isSelected? table.getSelectionForeground() : table.getForeground());
-			
+
 			if (value != null && value instanceof Packet) {
 
 				final Packet packet = (Packet)value;

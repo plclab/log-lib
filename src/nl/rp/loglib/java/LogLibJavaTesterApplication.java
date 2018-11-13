@@ -128,8 +128,8 @@ public class LogLibJavaTesterApplication {
 
 	private void exit() {
 
-		testClient.exit();
-		testServer.exit();
+		testClient.stop();
+		testServer.stop();
 
 		System.exit(0);
 

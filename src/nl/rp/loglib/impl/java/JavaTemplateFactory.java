@@ -150,20 +150,20 @@ public class JavaTemplateFactory extends TemplateFactory {
 		instructions.add("i = -1;");
 		instructions.add("if (bufferWritePointer >= bufferReadPointer) {");
 		instructions.add(TAB + "if (bufferWritePointer + length >= bufferLength) {");
-		instructions.add(TABTAB + "if (bufferReadPointer >= length) {"); //TODO: Shouldn't it be >= length - 1 ???
+		instructions.add(TABTAB + "if (bufferReadPointer >= length) {");
 		instructions.add(TABTABTAB + "bufferOverflow = bufferWritePointer;");
 		instructions.add(TABTABTAB + "buffer[0] = " + Constant.START_FLAG.name() + ";");
 		instructions.add(TABTABTAB + "buffer[1] = magicByte;");
 		instructions.add(TABTABTAB + "i = 2;");
 		instructions.add(TABTABTAB + "return true;");
 		instructions.add(TABTAB + "}");
-		instructions.add(TAB + "} else if (bufferLength - (bufferWritePointer - bufferReadPointer) >= length) {");
+		instructions.add(TAB + "} else {");
 		instructions.add(TABTAB + "i = bufferWritePointer + 1;");
 		instructions.add(TABTAB + "buffer[i++] = " + Constant.START_FLAG.name() + ";");
 		instructions.add(TABTAB + "buffer[i++] = magicByte;");
 		instructions.add(TABTAB + "return true;");
 		instructions.add(TAB + "}");
-		instructions.add("} else if (bufferReadPointer - bufferWritePointer >= length) {");
+		instructions.add("} else if (bufferReadPointer - bufferWritePointer > length) {");
 		instructions.add(TAB + "i = bufferWritePointer + 1;");
 		instructions.add(TAB + "buffer[i++] = " + Constant.START_FLAG.name() + ";");
 		instructions.add(TAB + "buffer[i++] = magicByte;");

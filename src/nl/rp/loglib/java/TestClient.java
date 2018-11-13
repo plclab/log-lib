@@ -11,6 +11,7 @@ import java.util.List;
 public class TestClient {
 
 	public static final int CONNECT_TIMEOUT = 1000;
+	public static final int RESTART_INTERVAL = 1000;
 
 	private enum ScannerState {
 		WAIT_FOR_START_FLAG,
@@ -25,8 +26,8 @@ public class TestClient {
 	private final int port;
 	private String ip = "127.0.0.1";
 	private int socketReadInterval = 1000;
-	private Socket socket;
-	private DataInputStream dataInputStream;
+	private Socket socket = null;
+	private DataInputStream dataInputStream = null;
 
 	private ScannerState scannerState = ScannerState.WAIT_FOR_START_FLAG;
 	private ByteBuffer byteBuffer = ByteBuffer.allocate(300); //TODO: Define max packet size
@@ -35,16 +36,12 @@ public class TestClient {
 	private int expectedLength = 0;
 
 	private final List<TestClientListener> listeners = new ArrayList<>();
-	
-	private boolean exit = false;
+
+	private boolean stop = false;
 
 
 	public TestClient(int port) {
-
 		this.port = port;
-
-		createBackgroundThreads();
-
 	}
 
 	public String getIp() {
@@ -62,33 +59,57 @@ public class TestClient {
 	public void setSocketReadInterval(int socketReadInterval) {
 		this.socketReadInterval = socketReadInterval;
 	}
-	
+
 	public void addClientListener(TestClientListener listener) {
 		listeners.add(listener);
 	}
-	
+
 	public void removeClientListener(TestClientListener listener) {
 		listeners.remove(listener);
 	}
-	
+
+	private void fireStarted() {
+		for (TestClientListener listener : listeners) {
+			listener.started();
+		}
+	}
+
+	private void fireConnected() {
+		for (TestClientListener listener : listeners) {
+			listener.connected();
+		}
+	}
+
 	private void firePacketReceived(Packet packet) {
 		for (TestClientListener listener : listeners) {
 			listener.packetReceived(packet);
 		}
 	}
 
-	public void exit() {
-		exit = true;
+	private void fireDisconnected() {
+		for (TestClientListener listener : listeners) {
+			listener.disconnected();
+		}
 	}
 
-	private void createBackgroundThreads() {
+	private void fireStopped() {
+		for (TestClientListener listener : listeners) {
+			listener.stopped();
+		}
+	}
+
+	public void start() {
+
+		stop = false;
 
 		new Thread(new Runnable() {
 
 			@Override
 			public void run() {
 
-				while (!exit) {
+				fireStarted();
+
+				while (!stop) {
 
 					try {
 
@@ -96,15 +117,13 @@ public class TestClient {
 						socket.setKeepAlive(true);
 						socket.connect(new InetSocketAddress(ip, port), CONNECT_TIMEOUT);
 
+						fireConnected();
+
 						dataInputStream = new DataInputStream(socket.getInputStream());
 
-						while (socket.isConnected() && !exit) {
+						while (socket.isConnected() && !stop) {
 
-							try {
-								Thread.sleep(socketReadInterval);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
+							Thread.sleep(socketReadInterval);
 
 							if (dataInputStream.available() > 0) {
 
@@ -117,20 +136,49 @@ public class TestClient {
 
 						}
 
-						try {
-							socket.close();
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
+						closeSocket();
+						fireDisconnected();
 
 					} catch (Exception e) {
+
+						closeSocket();
+						fireDisconnected();
+
 						e.printStackTrace();
+
+					}
+
+					if (!stop) {
+						try {
+							Thread.sleep(RESTART_INTERVAL);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 					}
 
 				}
 
+				fireStopped();
+
 			}
 		}).start();
+
+	}
+
+	public void stop() {
+		closeSocket();
+		stop = true;
+	}
+
+	private void closeSocket() {
+
+		if (socket != null) {
+			try {
+				socket.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}			
+		}
 
 	}
 
@@ -174,7 +222,7 @@ public class TestClient {
 					} else {
 
 						expectedLength = getLengthForType1(b);
-						
+
 						if (expectedLength < 0) {
 							expectedLengthIndex = bytesSinceStartFlag + 1;
 							scannerState = ScannerState.WAIT_FOR_LENGTH;
@@ -199,7 +247,7 @@ public class TestClient {
 					} else {
 
 						expectedLength = 0; //TODO
-						
+
 						if (expectedLength < 0) {
 							expectedLengthIndex = bytesSinceStartFlag + 1;
 							scannerState = ScannerState.WAIT_FOR_LENGTH;
@@ -220,7 +268,7 @@ public class TestClient {
 				if (bytesSinceStartFlag == 4) {
 
 					expectedLength = 0; //TODO
-					
+
 					if (expectedLength < 0) {
 						expectedLengthIndex = bytesSinceStartFlag + 1;
 						scannerState = ScannerState.WAIT_FOR_LENGTH;
@@ -342,19 +390,23 @@ public class TestClient {
 		System.out.println("Packet received, length = " + expectedLength);
 
 		final Packet packet = new Packet();
-		
+
 		packet.setTime(new Date().getTime());
-		
+
 		//TODO: Read packet from bytes
-		
+
 		firePacketReceived(packet);
-		
+
 	}
-	
+
 	public interface TestClientListener {
-		
+
+		public void started();
+		public void connected();
 		public void packetReceived(Packet packet);
-		
+		public void disconnected();
+		public void stopped();
+
 	}
 
 }

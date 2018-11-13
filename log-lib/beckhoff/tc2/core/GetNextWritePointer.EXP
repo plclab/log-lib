@@ -23,10 +23,10 @@ IF WritePointer >= ReadPointer THEN
             BufferOverflow := WritePointer;
             GetNextWritePointer := 0;
         END_IF
-    ELSIF BufferSize - (WritePointer - ReadPointer) >= Length THEN
+    ELSE
         GetNextWritePointer := WritePointer + 1;
     END_IF
-ELSIF ReadPointer - WritePointer >= Length THEN
+ELSIF ReadPointer - WritePointer > Length THEN
     GetNextWritePointer := WritePointer + 1;
 END_IF
 END_FUNCTION

@@ -112,14 +112,14 @@ public class SclTemplateFactory extends TemplateFactory {
 		instructions.add(TABTABTAB + "#Handle.Buffer[1] := #Handle.MagicByte;");
 		instructions.add(TABTABTAB + "#i := 2;");
 		instructions.add(TABTAB + "END_IF;");
-		instructions.add(TAB + "ELSIF #Handle.BufferSize - (#Handle.BufferWritePointer - #Handle.BufferReadPointer) >= #Length THEN");
+		instructions.add(TAB + "ELSE");
 		instructions.add(TABTAB + "#i := #Handle.BufferWritePointer + 1;");
 		instructions.add(TABTAB + "#Handle.Buffer[#i] := " + Constant.START_FLAG.getValue() + ";");
 		instructions.add(TABTAB + "#i := #i + 1;");
 		instructions.add(TABTAB + "#Handle.Buffer[#i] := #Handle.MagicByte;");
 		instructions.add(TABTAB + "#i := #i + 1;");
 		instructions.add(TAB + "END_IF;");
-		instructions.add("ELSIF #Handle.BufferReadPointer - #Handle.BufferWritePointer >= #Length THEN");
+		instructions.add("ELSIF #Handle.BufferReadPointer - #Handle.BufferWritePointer > #Length THEN");
 		instructions.add(TAB + "#i := #Handle.BufferWritePointer + 1;");
 		instructions.add(TAB + "#Handle.Buffer[#i] := " + Constant.START_FLAG.getValue() + ";");
 		instructions.add(TAB + "#i := #i + 1;");
