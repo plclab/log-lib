@@ -38,6 +38,22 @@ public enum Key {
 		this.dataType = dataType;
 	}
 
+	public static Key getKeyForName(String name) {
+
+		if (name == null || name.length() == 0) {
+			return null;
+		}
+
+		for (Key key : Key.values()) {
+			if (name.equals(key.name())) {
+				return key;
+			}
+		}
+
+		return null;
+
+	}
+
 	public static Key[] stringToKeys(String keysString) {
 
 		final String[] keyStrings = keysString.split("_");
@@ -109,7 +125,7 @@ public enum Key {
 
 			default:
 				break;
-				
+
 			}
 
 		}

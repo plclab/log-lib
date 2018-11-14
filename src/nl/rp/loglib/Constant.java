@@ -631,5 +631,21 @@ public enum Constant {
 	public int getValue() {
 		return value;
 	}
+	
+	public static Constant getConstantForName(String name) {
+		
+		if (name == null || name.length() == 0) {
+			return null;
+		}
+		
+		for (Constant constant : Constant.values()) {
+			if (name.equals(constant.name())) {
+				return constant;
+			}
+		}
+		
+		return null;
+		
+	}
 
 }

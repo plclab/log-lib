@@ -5,6 +5,12 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -14,6 +20,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
+import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -21,6 +28,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import nl.rp.loglib.Constant;
+import nl.rp.loglib.DataType;
 import nl.rp.loglib.Key;
 import nl.rp.loglib.java.TestServer.TestServerListener;
 
@@ -151,7 +159,8 @@ public class ServerPanel extends JPanel {
 			}
 		});
 
-		eventPanel.evtComboBox.setSelectedIndex(0);
+		eventPanel.updateValueComponents();
+		eventPanel.updateSelectedEvent();
 
 	}
 
@@ -169,51 +178,250 @@ public class ServerPanel extends JPanel {
 
 		logBufferPanel.repaint();
 
+		if (eventPanel.isAutoUpdateTickEnabled()) {
+			eventPanel.autoUpdateTick();
+		}
+
+		if (eventPanel.isRandomValueEnabled()) {
+			eventPanel.updateRandomValue();
+		}
+
 	}
 
 	private class EventPanel extends JPanel {
 
+		private final JCheckBox groupCheckBox;
 		private final JSpinner groupSpinner;
+		private final JCheckBox idCheckBox;
 		private final JSpinner idSpinner;
+		private final JCheckBox channelCheckBox;
 		private final JSpinner channelSpinner;
+		private final JCheckBox tickCheckBox;
+		private final JComboBox<DataType> tickDataTypeComboBox;
+		private final JSpinner tickSpinner;
+		private final JCheckBox autoUpdateTickCheckBox;
+		private final JCheckBox valueCheckBox;
+		private final JComboBox<DataType> valueDataTypeComboBox;
+		private final JComboBox<Boolean> booleanValuesComboBox;
+		private final JSpinner integerValuesSpinner;
+		private final JSpinner floatValuesSpinner;
+		private final JTextField stringValuesTextField;
+		private final JCheckBox randomValuesCheckBox;
 
-		private final JComboBox<Constant> evtComboBox;
+		private final JComboBox<String> eventComboBox;
 
+		private long autoUpdateTickStart = System.currentTimeMillis();
+
+		private final List<JComponent> activeValueComponents = new ArrayList<>();
+
+		private final Random random = new Random();
+		
 
 		public EventPanel() {
 
 			final GridBagLayout layout = new GridBagLayout();
 			layout.rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0};
 			layout.rowHeights = new int[] {8, 22, 5, 22, 5, 22, 8};
-			layout.columnWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0};
-			layout.columnWidths = new int[] {8, 75, 5, 100, 5, 100, 5, 100, 5, 100, 5, 100, 8};
+			layout.columnWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0};
+			layout.columnWidths = new int[] {8, 75, 5, 115, 5, 85, 5, 115, 5, 250, 5, 0, 100, 8};
 			setLayout(layout);
 
+			groupCheckBox = createLabelCheckBox("Group");
+			add(groupCheckBox, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			groupCheckBox.addItemListener(new ItemListener() {
+
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					groupSpinner.setEnabled(groupCheckBox.isSelected());
+					updateSelectedEvent();
+				}
+			});
+
 			groupSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 65535, 1));
-			add(createLabelCheckBox("Group", groupSpinner), new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			groupSpinner.setEditor(new JSpinner.NumberEditor(groupSpinner, "#"));
 			add(groupSpinner, new GridBagConstraints(3, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			groupSpinner.addChangeListener(new ChangeListener() {
+
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					updateSelectedEvent();
+				}
+			});
+
+			idCheckBox = createLabelCheckBox("Id");
+			add(idCheckBox, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			idCheckBox.addItemListener(new ItemListener() {
+
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					idSpinner.setEnabled(idCheckBox.isSelected());
+					if (!idCheckBox.isSelected()) {
+						groupCheckBox.setSelected(false);
+					}
+					updateSelectedEvent();
+				}
+			});
 
 			idSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 65535, 1));
-			add(createLabelCheckBox("Id", idSpinner), new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			idSpinner.setEditor(new JSpinner.NumberEditor(idSpinner, "#"));
 			add(idSpinner, new GridBagConstraints(3, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			idSpinner.addChangeListener(new ChangeListener() {
+
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					updateSelectedEvent();
+				}
+			});
+
+			channelCheckBox = createLabelCheckBox("Channel");
+			add(channelCheckBox, new GridBagConstraints(1, 5, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			channelCheckBox.addItemListener(new ItemListener() {
+
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					channelSpinner.setEnabled(channelCheckBox.isSelected());
+					if (!channelCheckBox.isSelected()) {
+						groupCheckBox.setSelected(false);
+						idCheckBox.setSelected(false);
+						valueCheckBox.setSelected(false);
+					}
+					updateSelectedEvent();
+				}
+			});
 
 			channelSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 65535, 1));
-			add(createLabelCheckBox("Channel", channelSpinner), new GridBagConstraints(1, 5, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			channelSpinner.setEditor(new JSpinner.NumberEditor(channelSpinner, "#"));
 			add(channelSpinner, new GridBagConstraints(3, 5, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			channelSpinner.addChangeListener(new ChangeListener() {
 
-			evtComboBox = new JComboBox<>();
-			add(evtComboBox, new GridBagConstraints(9, 5, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(1, 0, 1, 0), 0, 0));
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					updateSelectedEvent();
+				}
+			});
+
+			tickCheckBox = createLabelCheckBox("Tick");
+			add(tickCheckBox, new GridBagConstraints(5, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			tickCheckBox.addItemListener(new ItemListener() {
+
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					tickDataTypeComboBox.setEnabled(tickCheckBox.isSelected());
+					tickSpinner.setEnabled(tickCheckBox.isSelected());
+					autoUpdateTickCheckBox.setEnabled(tickCheckBox.isSelected());
+					updateSelectedEvent();
+				}
+			});
+
+			tickDataTypeComboBox = new JComboBox<>();
+			add(tickDataTypeComboBox, new GridBagConstraints(7, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			tickDataTypeComboBox.addItem(DataType.INT32);  //TODO? (Protocol doesn't know if it's signed/unsigned)
+			tickDataTypeComboBox.addItem(DataType.UINT32); //TODO? (Protocol doesn't know if it's signed/unsigned)
+			tickDataTypeComboBox.addItem(DataType.INT64);  //TODO? (Protocol doesn't know if it's signed/unsigned)
+			tickDataTypeComboBox.addItem(DataType.UINT64); //TODO? (Protocol doesn't know if it's signed/unsigned)
+			tickDataTypeComboBox.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					updateSelectedEvent();	
+				}
+			});
+
+			tickSpinner = new JSpinner();
+			tickSpinner.setEditor(new JSpinner.NumberEditor(tickSpinner, "#"));
+			add(tickSpinner, new GridBagConstraints(9, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+
+			autoUpdateTickCheckBox = new JCheckBox("Auto update");
+			autoUpdateTickCheckBox.setSelected(true);
+			add(autoUpdateTickCheckBox, new GridBagConstraints(11, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			autoUpdateTickCheckBox.addItemListener(new ItemListener() {
+
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					if (autoUpdateTickCheckBox.isSelected()) {
+						autoUpdateTickStart = System.currentTimeMillis();
+					}
+				}
+			});
+
+			valueCheckBox = createLabelCheckBox("Value");
+			add(valueCheckBox, new GridBagConstraints(5, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			valueCheckBox.addItemListener(new ItemListener() {
+
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					valueDataTypeComboBox.setEnabled(valueCheckBox.isSelected());
+					booleanValuesComboBox.setEnabled(valueCheckBox.isSelected());
+					integerValuesSpinner.setEnabled(valueCheckBox.isSelected());
+					floatValuesSpinner.setEnabled(valueCheckBox.isSelected());
+					stringValuesTextField.setEnabled(valueCheckBox.isSelected());
+					randomValuesCheckBox.setEnabled(valueCheckBox.isSelected());
+					if (!valueCheckBox.isSelected()) {
+						groupCheckBox.setSelected(false);
+						idCheckBox.setSelected(false);
+						channelCheckBox.setSelected(false);
+					}
+					updateSelectedEvent();
+				}
+			});
+
+			valueDataTypeComboBox = new JComboBox<>();
+			add(valueDataTypeComboBox, new GridBagConstraints(7, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			valueDataTypeComboBox.addItem(DataType.BOOL8);
+			valueDataTypeComboBox.addItem(DataType.INT8);
+			valueDataTypeComboBox.addItem(DataType.UINT8);
+			valueDataTypeComboBox.addItem(DataType.INT16);
+			valueDataTypeComboBox.addItem(DataType.UINT16);
+			valueDataTypeComboBox.addItem(DataType.INT32);
+			valueDataTypeComboBox.addItem(DataType.UINT32);
+			valueDataTypeComboBox.addItem(DataType.REAL32);
+			valueDataTypeComboBox.addItem(DataType.INT64);
+			valueDataTypeComboBox.addItem(DataType.UINT64);
+			valueDataTypeComboBox.addItem(DataType.REAL64);
+			valueDataTypeComboBox.addItem(DataType.STRING);
+			valueDataTypeComboBox.setSelectedItem(DataType.REAL32);
+			valueDataTypeComboBox.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					updateValueComponents();
+					updateSelectedEvent();	
+				}
+			});
+
+			booleanValuesComboBox = new JComboBox<>();
+			booleanValuesComboBox.addItem(Boolean.FALSE);
+			booleanValuesComboBox.addItem(Boolean.TRUE);
+
+			integerValuesSpinner = new JSpinner();
+			integerValuesSpinner.setEditor(new JSpinner.NumberEditor(integerValuesSpinner, "#"));
+
+			floatValuesSpinner = new JSpinner(new SpinnerNumberModel(0.0, null, null, 0.001));
+			final JSpinner.NumberEditor floatValuesSpinnerEditor = new JSpinner.NumberEditor(floatValuesSpinner);
+			floatValuesSpinnerEditor.getFormat().setGroupingUsed(false);
+			floatValuesSpinnerEditor.getFormat().setMinimumFractionDigits(3);
+			floatValuesSpinner.setEditor(floatValuesSpinnerEditor);
+
+			stringValuesTextField = new JTextField();
+
+			randomValuesCheckBox = new JCheckBox("Random values");
+			randomValuesCheckBox.setSelected(true);
+
+			eventComboBox = new JComboBox<>();
+			add(new JLabel("Event"), new GridBagConstraints(5, 5, 1, 1, 0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 3), 0, 0));
+			add(eventComboBox, new GridBagConstraints(7, 5, 3, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(1, 0, 1, 0), 0, 0));
+			eventComboBox.addItem("Unknown event..");
 			for (Constant constant : Constant.values()) {
 				if (constant.name().startsWith(Key.EVT.name())) {
-					evtComboBox.addItem(constant);
+					eventComboBox.addItem(constant.name());
 				}
 			}
-			evtComboBox.addActionListener(new ActionListener() {
+			eventComboBox.addActionListener(new ActionListener() {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
 
-					final Constant selectedConstant = getSelectedConstant();
+					final Constant selectedConstant = getSelectedEvent();
 					if (selectedConstant != null) {
 						logBufferPanel.setPacketKeys(Key.stringToKeys(selectedConstant.name()));
 						refreshUI();
@@ -223,13 +431,13 @@ public class ServerPanel extends JPanel {
 			});
 
 			final JButton addEvtButton = new JButton("Add event");
-			add(addEvtButton, new GridBagConstraints(7, 5, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			add(addEvtButton, new GridBagConstraints(12, 5, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 			addEvtButton.addActionListener(new ActionListener() {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
 
-					final Constant selectedConstant = getSelectedConstant();
+					final Constant selectedConstant = getSelectedEvent();
 					if (selectedConstant != null) {
 						testServer.createEvent(selectedConstant);
 						refreshUI();
@@ -240,7 +448,7 @@ public class ServerPanel extends JPanel {
 
 		}
 
-		private JCheckBox createLabelCheckBox(String text, JComponent component) {
+		private JCheckBox createLabelCheckBox(String text) {
 
 			final JCheckBox checkBox = new JCheckBox(text);
 			//checkBox.setFont(checkBox.getFont().deriveFont(10.0f));
@@ -249,26 +457,275 @@ public class ServerPanel extends JPanel {
 			checkBox.setSelected(true);
 			checkBox.setHorizontalTextPosition(SwingConstants.LEFT);
 			checkBox.setHorizontalAlignment(SwingConstants.RIGHT);
-			checkBox.addActionListener(new ActionListener() {
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					component.setEnabled(checkBox.isSelected());
-				}
-			});
 
 			return checkBox;
 
 		}
 
-		private Constant getSelectedConstant() {
+		private boolean isAutoUpdateTickEnabled() {
+			return autoUpdateTickCheckBox.isEnabled() && autoUpdateTickCheckBox.isSelected();
+		}
 
-			final Object selectedConstant = evtComboBox.getSelectedItem();
-			if (selectedConstant != null && selectedConstant instanceof Constant) {
-				return (Constant)selectedConstant;
+		private void autoUpdateTick() {
+			tickSpinner.setValue(System.currentTimeMillis() - autoUpdateTickStart);
+		}
+
+		private boolean isRandomValueEnabled() {
+			return randomValuesCheckBox.isEnabled() && randomValuesCheckBox.isSelected();
+		}
+
+		private void updateRandomValue() {
+
+			final DataType valueDataType = getSelectedValueDataType();
+			if (valueDataType != null) {
+
+				switch (valueDataType) {
+
+				case BOOL8:
+					booleanValuesComboBox.setSelectedItem(random.nextBoolean());
+					break;
+
+				case INT8:
+				case UINT8:
+				case INT16:
+				case UINT16:
+				case INT32:
+				case UINT32:
+				case INT64:
+				case UINT64:
+					integerValuesSpinner.setValue(random.nextInt(Integer.MAX_VALUE)); //TODO: Handle DataType bounds
+					break;
+
+				case REAL32:
+				case REAL64:
+					floatValuesSpinner.setValue((random.nextDouble() * random.nextInt(Integer.MAX_VALUE)) + random.nextDouble()); //TODO: Handle DataType bounds
+					break;
+
+				case STRING:
+					stringValuesTextField.setText(UUID.randomUUID().toString());
+					break;
+
+				default:
+					break;
+				}
+
+			}
+			
+		}
+
+		private void updateValueComponents() {
+
+			for (JComponent component : activeValueComponents) {
+				remove(component);
+			}
+			activeValueComponents.clear();
+
+			final DataType valueDataType = getSelectedValueDataType();
+			if (valueDataType != null) {
+
+				switch (valueDataType) {
+
+				case BOOL8:
+					add(booleanValuesComboBox, new GridBagConstraints(9, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+					add(randomValuesCheckBox, new GridBagConstraints(11, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+					activeValueComponents.add(booleanValuesComboBox);
+					activeValueComponents.add(randomValuesCheckBox);
+					break;
+
+				case INT8:
+				case UINT8:
+				case INT16:
+				case UINT16:
+				case INT32:
+				case UINT32:
+				case INT64:
+				case UINT64:
+					add(integerValuesSpinner, new GridBagConstraints(9, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+					add(randomValuesCheckBox, new GridBagConstraints(11, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+					activeValueComponents.add(integerValuesSpinner);
+					activeValueComponents.add(randomValuesCheckBox);
+					break;
+
+				case REAL32:
+				case REAL64:
+					add(floatValuesSpinner, new GridBagConstraints(9, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+					add(randomValuesCheckBox, new GridBagConstraints(11, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+					activeValueComponents.add(floatValuesSpinner);
+					activeValueComponents.add(randomValuesCheckBox);
+					break;
+
+				case STRING:
+					add(stringValuesTextField, new GridBagConstraints(9, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+					add(randomValuesCheckBox, new GridBagConstraints(11, 3, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+					activeValueComponents.add(stringValuesTextField);
+					activeValueComponents.add(randomValuesCheckBox);
+					break;
+
+				default:
+					break;
+				}
+
+			}
+
+			revalidate();
+			repaint();
+
+		}
+
+		private DataType getSelectedGroupDataType() {
+			if (groupSpinner.isEnabled()) {
+				if ((int)groupSpinner.getValue() < 256) {
+					return DataType.UINT8;
+				} else if ((int)groupSpinner.getValue() < 65536) {
+					return DataType.UINT16;
+				}
+			}
+			return null;
+		}
+
+		private DataType getSelectedIdDataType() {
+			if (idSpinner.isEnabled()) {
+				if ((int)idSpinner.getValue() < 256) {
+					return DataType.UINT8;
+				} else if ((int)idSpinner.getValue() < 65536) {
+					return DataType.UINT16;
+				}
+			}
+			return null;
+		}
+
+		private DataType getSelectedChannelDataType() {
+			if (channelSpinner.isEnabled()) {
+				if ((int)channelSpinner.getValue() < 256) {
+					return DataType.UINT8;
+				} else if ((int)channelSpinner.getValue() < 65536) {
+					return DataType.UINT16;
+				}
+			}
+			return null;
+		}
+
+		private DataType getSelectedTickDataType() {
+			if (tickDataTypeComboBox.isEnabled()) {
+				final Object selectedTickDataType = tickDataTypeComboBox.getSelectedItem();
+				if (selectedTickDataType != null && selectedTickDataType instanceof DataType) {
+					return (DataType)selectedTickDataType;
+				}
+			}
+			return null;
+		}
+
+		private DataType getSelectedValueDataType() {
+			if (valueDataTypeComboBox.isEnabled()) {
+				final Object selectedValueDataType = valueDataTypeComboBox.getSelectedItem();
+				if (selectedValueDataType != null && selectedValueDataType instanceof DataType) {
+					return (DataType)selectedValueDataType;
+				}
+			}
+			return null;
+		}
+
+		private Constant getSelectedEvent() {
+			final Object selectedConstant = eventComboBox.getSelectedItem();
+			if (selectedConstant != null && selectedConstant instanceof String) {
+				return Constant.getConstantForName((String)selectedConstant);
 			} else {
 				return null;
 			}
+		}
+
+		private void updateSelectedEvent() {
+
+			final Constant eventConstant = getEventConstant(
+					getSelectedGroupDataType(),
+					getSelectedIdDataType(),
+					getSelectedChannelDataType(),
+					getSelectedTickDataType(),
+					getSelectedValueDataType());
+
+			if (eventConstant != null) {
+				eventComboBox.setSelectedItem(eventConstant.name());
+			} else {
+				eventComboBox.setSelectedIndex(0);
+			}
+
+		}
+
+		private Constant getEventConstant(DataType groupDataType, DataType idDataType, DataType channelDataType, DataType tickDataType, DataType valueDataType) {
+
+			Key groupKey = null;
+			if (groupDataType != null) {
+				if (groupDataType == DataType.UINT8) {
+					groupKey = Key.GR8;
+				} else if (groupDataType == DataType.UINT16) {
+					groupKey = Key.GR16;
+				}
+			}
+
+			Key idKey = null;
+			if (idDataType != null) {
+				if (idDataType == DataType.UINT8) {
+					idKey = Key.ID8;
+				} else if (idDataType == DataType.UINT16) {
+					idKey = Key.ID16;
+				}
+			}
+
+			Key channelKey = null;
+			if (channelDataType != null) {
+				if (channelDataType == DataType.UINT8) {
+					channelKey = Key.CH8;
+				} else if (channelDataType == DataType.UINT16) {
+					channelKey = Key.CH16;
+				}
+			}
+
+			Key tickKey = null;
+			if (tickDataType != null) {
+				if (tickDataType == DataType.UINT32 || tickDataType == DataType.INT32) {
+					tickKey = Key.TICK32;
+				} else if (tickDataType == DataType.UINT64 || tickDataType == DataType.INT64) {
+					tickKey = Key.TICK64;
+				}
+			}
+
+			Key valueKey = null;
+			if (valueDataType != null) {
+				valueKey = Key.getKeyForName(valueDataType.name());
+			}
+
+			Constant constant = getEventConstant(groupKey, idKey, channelKey, tickKey, valueKey);
+
+			if (constant == null && channelKey == Key.CH8) {
+				channelKey = Key.CH16;
+				constant = getEventConstant(groupKey, idKey, channelKey, tickKey, valueKey);
+			}
+
+			if (constant == null && idKey == Key.ID8) {
+				idKey = Key.ID16;
+				constant = getEventConstant(groupKey, idKey, channelKey, tickKey, valueKey);
+			}
+
+			if (constant == null && groupKey == Key.GR8) {
+				groupKey = Key.GR16;
+				constant = getEventConstant(groupKey, idKey, channelKey, tickKey, valueKey);
+			}
+
+			return constant;
+
+		}
+
+		private Constant getEventConstant(Key groupKey, Key idKey, Key channelKey, Key tickKey, Key valueKey) {
+
+			String constantName = "EVT";
+
+			if (groupKey != null) constantName += "_" + groupKey.name();
+			if (idKey != null) constantName += "_" + idKey.name();
+			if (channelKey != null) constantName += "_" + channelKey.name();
+			if (tickKey != null) constantName += "_" + tickKey.name();
+			if (valueKey != null) constantName += "_" + valueKey.name();
+
+			return Constant.getConstantForName(constantName);
 
 		}
 
