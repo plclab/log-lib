@@ -20,7 +20,7 @@ END_VAR
 
 Handle.BufferAddress := BufferAddress;
 Handle.BufferSize := BufferSize;
-Handle.BufferEndAddress := BufferAddress + (BufferSize - 1);
+Handle.BufferEndAddress := BufferAddress + DINT_TO_DWORD(BufferSize - 1);
 
 byteOrderInt := 1;
 pInt := ADR(byteOrderArray[0]);

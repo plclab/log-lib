@@ -22,7 +22,7 @@ END_VAR
 i := GetNextWritePointer(10, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
 IF i >= 0 THEN
 
-    p1 := Handle.BufferAddress + i;
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
 
     p1^ := START_FLAG;
 

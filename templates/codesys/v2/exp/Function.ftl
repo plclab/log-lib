@@ -1,9 +1,9 @@
 
 (* @NESTEDCOMMENTS := 'No' *)
-(* @PATH := '<#if pou.path?has_content><#list pou.path as dir>\/${dir}</#list></#if>' *)
+(* @PATH := '<#if path?has_content><#list path as dir>\/${dir}</#list></#if>' *)
 (* @OBJECTFLAGS := '0, 8' *)
 (* @SYMFILEFLAGS := '2048' *)
-FUNCTION ${pou.name} : ${interface.returnType}
+FUNCTION ${name} : ${interface.returnType}
 VAR_INPUT
 <#if interface.inputVars?has_content>
 <#list interface.inputVars as inputVar>

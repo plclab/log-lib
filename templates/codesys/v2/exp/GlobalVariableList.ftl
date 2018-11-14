@@ -1,6 +1,6 @@
 (* @NESTEDCOMMENTS := 'Yes' *)
 (* @GLOBAL_VARIABLE_LIST := '${name}' *)
-(* @PATH := '' *)
+(* @PATH := '<#if path?has_content><#list path as dir>\/${dir}</#list></#if>' *)
 (* @OBJECTFLAGS := '0, 8' *)
 (* @SYMFILEFLAGS := '2048' *)
 VAR_GLOBAL<#if constant!false> CONSTANT</#if>

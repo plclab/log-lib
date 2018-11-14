@@ -53,6 +53,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 
 		final TemplateData templateData = new TemplateData();
 		templateData.setOutputFileName(name);
+		templateData.addNode("path", new String[] {"core"});
 		templateData.addNode("name", name);
 		templateData.addNode("constant", true);
 		templateData.addNode("vars", vars);
@@ -66,11 +67,12 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		final String name = "LogLibBasic";
 
 		final List<Variable> vars = new ArrayList<>();
-		vars.add(new Variable("GlobalLogBufferHandle", "LogBufferHandle"));
+		vars.add(new Variable("GlobalLogBufferHandle", "LogBufferHandle", null, null, true));
 		vars.add(new Variable("GlobalTick", "UDINT"));
 
 		final TemplateData templateData = new TemplateData();
 		templateData.setOutputFileName(name);
+		templateData.addNode("path", new String[] {"basic"});
 		templateData.addNode("name", name);
 		templateData.addNode("vars", vars);
 
@@ -95,6 +97,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		templateData.setOutputFileName(name);
 		templateData.addNode("path", new String[] {"core"});
 		templateData.addNode("name", name);
+		templateData.addNode("type", "struct");
 		templateData.addNode("vars", vars);
 
 		return templateData;
@@ -108,7 +111,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		inputVars.add(new Variable("BufferSize", "DINT"));
 
 		final List<Variable> inOutVars = new ArrayList<>();	
-		inOutVars.add(new Variable("Handle", "LogBufferHandle"));
+		inOutVars.add(new Variable("Handle", "LogBufferHandle", null, null, true));
 
 		final List<Variable> vars = new ArrayList<>();
 		vars.add(new Variable("byteOrderInt", "INT"));
@@ -119,7 +122,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		instructions.add("");
 		instructions.add("Handle.BufferAddress := BufferAddress;");
 		instructions.add("Handle.BufferSize := BufferSize;");
-		instructions.add("Handle.BufferEndAddress := BufferAddress + (BufferSize - 1);");
+		instructions.add("Handle.BufferEndAddress := BufferAddress + DINT_TO_DWORD(BufferSize - 1);");
 		instructions.add("");
 		instructions.add("byteOrderInt := 1;");
 		instructions.add("pInt := ADR(byteOrderArray[0]);");
@@ -438,17 +441,15 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		final TemplateData templateData = new TemplateData();
 		templateData.setOutputFileName(functionName);
 
-		final Map<String, Object> pouNode = new HashMap<>();
-		templateData.addNode("pou", pouNode);
-		pouNode.put("path", new String[] {"core", "evt"});
-		pouNode.put("name", functionName);
+		templateData.addNode("path", new String[] {"core", "evt"});
+		templateData.addNode("name", functionName);
 
 		final Map<String, Object> interfaceNode = new HashMap<>();
 		templateData.addNode("interface", interfaceNode);
 		interfaceNode.put("returnType", getDataType(DataType.BOOL8));
 		interfaceNode.put("inputVars", inputVars);
 		interfaceNode.put("inOutVars", new Variable[] {
-				new Variable("Handle", "LogBufferHandle")
+				new Variable("Handle", "LogBufferHandle", null, null, true)
 		});
 
 		final List<Variable> vars = new ArrayList<>();
@@ -473,7 +474,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		instructions.add("i := GetNextWritePointer(" + length + ", Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);");
 		instructions.add("IF i >= 0 THEN");
 		instructions.add("");
-		instructions.add(TAB + "p1 := Handle.BufferAddress + i;");
+		instructions.add(TAB + "p1 := Handle.BufferAddress + DINT_TO_DWORD(i);"); //TODO: DINT_TO_DWORD was added because of a warning under CoDeSys V3, check if this impacts runtime performance
 		instructions.add("");
 		instructions.addAll(evtInstructions);
 		instructions.add(TAB + "Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);");
@@ -538,11 +539,9 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		final TemplateData templateData = new TemplateData();
 		templateData.setOutputFileName(name);
 
-		final Map<String, Object> pouNode = new HashMap<>();
-		templateData.addNode("pou", pouNode);
-		pouNode.put("name", name);
+		templateData.addNode("name", name);
 		if (path != null) {
-			pouNode.put("path", path);
+			templateData.addNode("path", path);
 		}
 
 		final Map<String, Object> interfaceNode = new HashMap<>();

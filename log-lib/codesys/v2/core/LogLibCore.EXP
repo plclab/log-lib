@@ -1,6 +1,6 @@
 (* @NESTEDCOMMENTS := 'Yes' *)
 (* @GLOBAL_VARIABLE_LIST := 'LogLibCore' *)
-(* @PATH := '' *)
+(* @PATH := '\/core' *)
 (* @OBJECTFLAGS := '0, 8' *)
 (* @SYMFILEFLAGS := '2048' *)
 VAR_GLOBAL CONSTANT

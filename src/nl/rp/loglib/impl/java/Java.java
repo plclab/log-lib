@@ -105,11 +105,9 @@ public class Java extends LogLibImpl {
 
 			//Process the template and write to output directory
 			final File logBufferOutputFile = new File(templateData.getOutputFileName());
-
-			final Writer out = new OutputStreamWriter(
-					new FileOutputStream(logBufferOutputFile));
-
-			template.process(templateData.getModel(), out);
+			final Writer writer = new OutputStreamWriter(new FileOutputStream(logBufferOutputFile));
+			template.process(templateData.getModel(), writer);
+			writer.close();
 
 			//Copy the file to this project so we can use it for testing
 			Files.copy(logBufferOutputFile.toPath(),

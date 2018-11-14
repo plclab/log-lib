@@ -28,7 +28,7 @@
   <types>
     <dataTypes />
     <pous>
-      <pou name="${pou.name}" pouType="function">
+      <pou name="${name}" pouType="function">
         <interface>
           <returnType>
             <${interface.returnType} />
@@ -96,7 +96,7 @@ ${instruction}
         <addData>
           <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
             <InterfaceAsPlainText>
-              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION ${pou.name} : ${interface.returnType}
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION ${name} : ${interface.returnType}
 VAR_INPUT
 <#if interface.inputVars?has_content>
 <#list interface.inputVars as inputVar>
