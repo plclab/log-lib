@@ -10,6 +10,7 @@ import nl.rp.loglib.impl.LogLibImpl;
 import nl.rp.loglib.impl.bachmann.mplc.BachmannMPlc;
 import nl.rp.loglib.impl.beckhoff.tc2.BeckhoffTc2;
 import nl.rp.loglib.impl.codesys.v2.CoDeSysV2;
+import nl.rp.loglib.impl.codesys.v3.CoDeSysV3;
 import nl.rp.loglib.impl.java.Java;
 import nl.rp.loglib.impl.siemens.s71200.SiemensS71200;
 
@@ -20,8 +21,6 @@ public class LogLibTemplateTests {
 
 		try {
 
-			createOutputDirectories();
-			
 			// Create your Configuration instance, and specify if up to what FreeMarker
 			// version (here 2.3.28) do you want to apply the fixes that are not 100%
 			// backward-compatible. See the Configuration JavaDoc for details.
@@ -45,40 +44,20 @@ public class LogLibTemplateTests {
 			// Wrap unchecked exceptions thrown during template processing into TemplateException-s.
 			configuration.setWrapUncheckedExceptions(true);
 
-			LogLibImpl logLibImpl;
-
-			/*
-			logLibImpl = new CoDeSysV3();
-			logLibImpl.generate(configuration);
-			*/
-
-			logLibImpl = new CoDeSysV2();
-			logLibImpl.generate(configuration);
-
-			logLibImpl = new BeckhoffTc2();
-			logLibImpl.generate(configuration);
-
-			logLibImpl = new BachmannMPlc();
-			logLibImpl.generate(configuration);
-
-			logLibImpl = new SiemensS71200();
-			logLibImpl.generate(configuration);
-
-			logLibImpl = new Java();
-			logLibImpl.generate(configuration);
-
+			createOutputDirectories();
+			generateImplementations(configuration);
 			printByteOrders();
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 	}
-	
+
 	private void createOutputDirectories() {
-		
+
 		new File("log-lib").mkdirs();
-		
+
 		//CoDeSys V2
 		new File("log-lib/codesys/v2/basic").mkdirs();
 		new File("log-lib/codesys/v2/comm/tcp").mkdirs();
@@ -120,9 +99,33 @@ public class LogLibTemplateTests {
 		new File("log-lib/java/core").mkdirs();
 
 	}
-	
+
+	private void generateImplementations(Configuration configuration) {
+
+		LogLibImpl logLibImpl;
+
+		logLibImpl = new Java();
+		logLibImpl.generate(configuration);
+
+		logLibImpl = new CoDeSysV3();
+		logLibImpl.generate(configuration);
+
+		logLibImpl = new CoDeSysV2();
+		logLibImpl.generate(configuration);
+
+		logLibImpl = new BeckhoffTc2();
+		logLibImpl.generate(configuration);
+
+		logLibImpl = new BachmannMPlc();
+		logLibImpl.generate(configuration);
+
+		logLibImpl = new SiemensS71200();
+		logLibImpl.generate(configuration);
+
+	}
+
 	private void printByteOrders() {
-		
+
 		ByteBuffer byteBuffer = ByteBuffer.allocate(2);
 		byteBuffer.order(ByteOrder.BIG_ENDIAN);
 		byteBuffer.putShort((short)1);
