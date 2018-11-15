@@ -96,6 +96,32 @@ BEGIN
 	END_IF;
 END_FUNCTION
 
+FUNCTION "Evt" : Void
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 0.1
+   VAR_IN_OUT
+      Handle : "LogBuffer";
+   END_VAR
+   
+   VAR_TEMP 
+      i : DInt;
+   END_VAR
+
+
+BEGIN
+	#i := "GetNextWritePointer"(Length := 4, Handle := #Handle);
+	IF #i >= 0 THEN
+	
+	    #Handle.Buffer[#i] := 1;
+	
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 254;
+	
+	    #Handle.BufferWritePointer := #i;
+	
+	END_IF;
+END_FUNCTION
+
 FUNCTION "EvtCh16Tick32Bool8" : Void
 { S7_Optimized_Access := 'FALSE' }
 VERSION : 0.1

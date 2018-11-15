@@ -1,13 +1,9 @@
 package nl.rp.loglib.java;
 
-public class Packet {
+public abstract class Packet {
 
 	private long time;
-	private Integer group = null;
-	private Integer id = null;
-	private Integer channel = null;
-	private Long tick = null;
-	private Object value = null;
+	private byte type;
 
 
 	public Packet() {
@@ -22,44 +18,42 @@ public class Packet {
 		this.time = time;
 	}
 
-	public Integer getGroup() {
-		return group;
+	public byte getType() {
+		return type;
 	}
+
+	public void setType(byte type) {
+		this.type = type;
+	}
+
+	public abstract Integer getGroup();
 
 	public void setGroup(Integer group) {
-		this.group = group;
+
 	}
 
-	public Integer getId() {
-		return id;
-	}
+	public abstract Integer getId();
 
 	public void setId(Integer id) {
-		this.id = id;
+
 	}
 
-	public Integer getChannel() {
-		return channel;
-	}
+	public abstract Integer getChannel();
 
 	public void setChannel(Integer channel) {
-		this.channel = channel;
+
 	}
 
-	public Long getTick() {
-		return tick;
-	}
+	public abstract Long getTick();
 
 	public void setTick(Long tick) {
-		this.tick = tick;
+
 	}
 
-	public Object getValue() {
-		return value;
-	}
+	public abstract Object getValue();
 
 	public void setValue(Object value) {
-		this.value = value;
+
 	}
 
 }

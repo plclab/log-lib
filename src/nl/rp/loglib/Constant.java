@@ -9,8 +9,9 @@ public enum Constant {
 	MAGIC_BYTE_V1_BIG_ENDIAN(0b01110001),
 	END_FLAG(0b11111110),
 
-	//4 bytes: 10
+	//4 bytes: 8
 	EVT_NULL(0),
+	EVT_FULL(1),
 
 	//6 bytes: 3
 	EVT_CH8_BOOL8(8),
@@ -370,10 +371,13 @@ public enum Constant {
 	EVT_GR16_ID16_CH16_TICK64_STRING(252),
 	EVT_GR16_ID16_CH16_TICK64_BYTES(253);
 
+	public static final String EVENT_PREFIX = "EVT_";
+
 	public static final ArrayList<Constant> CORE_EVENTS_DEFAULT = new ArrayList<Constant>();
 	static {
 
 		CORE_EVENTS_DEFAULT.add(EVT_NULL);
+		CORE_EVENTS_DEFAULT.add(EVT_FULL);
 
 		CORE_EVENTS_DEFAULT.add(EVT_TICK32);
 		CORE_EVENTS_DEFAULT.add(EVT_TICK64);
@@ -416,6 +420,7 @@ public enum Constant {
 	static {
 
 		CORE_EVENTS_MIN.add(EVT_NULL);
+		CORE_EVENTS_MIN.add(EVT_FULL);
 
 		CORE_EVENTS_MIN.add(EVT_CH16_TICK32_BOOL8);
 		CORE_EVENTS_MIN.add(EVT_CH16_TICK32_INT32);
@@ -453,7 +458,7 @@ public enum Constant {
 		CORE_EVENTS_EXT.add(EVT_GR8_ID8_CH16_TICK32_BYTES);
 
 	}
-	
+
 	public static final ArrayList<Constant> CORE_EVENTS_EXT_NOTICK = new ArrayList<Constant>();
 	static {
 
@@ -631,21 +636,35 @@ public enum Constant {
 	public int getValue() {
 		return value;
 	}
-	
+
 	public static Constant getConstantForName(String name) {
-		
+
 		if (name == null || name.length() == 0) {
 			return null;
 		}
-		
+
 		for (Constant constant : Constant.values()) {
 			if (name.equals(constant.name())) {
 				return constant;
 			}
 		}
-		
+
 		return null;
-		
+
+	}
+
+	public static Constant getEventConstantForType(byte typeAsUnsignedByte) {
+
+		int type = typeAsUnsignedByte & 0xFF;
+
+		for (Constant constant : values()) {
+			if (constant.name().startsWith(EVENT_PREFIX) && constant.value == type) {
+				return constant;
+			}
+		}
+
+		return null;
+
 	}
 
 }

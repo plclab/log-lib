@@ -5,8 +5,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+
+import nl.rp.loglib.Constant;
 
 public class TestClient {
 
@@ -34,6 +35,7 @@ public class TestClient {
 	private int bytesSinceStartFlag = 0;
 	private int expectedLengthIndex = 0;
 	private int expectedLength = 0;
+	private final PacketFactory packetFactory = new PacketFactory();
 
 	private final List<TestClientListener> listeners = new ArrayList<>();
 
@@ -333,51 +335,53 @@ public class TestClient {
 	}
 
 	//TODO: Should we return packet length or payload length?
-	private int getLengthForType1(byte type) {
+	private int getLengthForType1(byte typeAsSignedByte) {
 
-		if (type < LogBuffer.EVT_CH8_BOOL8) {
+		int type = typeAsSignedByte & 0xFF;
+
+		if (type < Constant.EVT_CH8_BOOL8.getValue()) {
 			return 4;
-		} else if (type < LogBuffer.EVT_CH8_INT16) {
+		} else if (type < Constant.EVT_CH8_INT16.getValue()) {
 			return 6;
-		} else if (type < LogBuffer.EVT_TICK32) {
+		} else if (type < Constant.EVT_TICK32.getValue()) {
 			return 7;
-		} else if (type < LogBuffer.EVT_CH8_INT32) {
+		} else if (type < Constant.EVT_CH8_INT32.getValue()) {
 			return 8;
-		} else if (type < LogBuffer.EVT_ID8_CH8_INT32) {
+		} else if (type < Constant.EVT_ID8_CH8_INT32.getValue()) {
 			return 9;
-		} else if (type < LogBuffer.EVT_GR8_ID8_CH8_INT32) {
+		} else if (type < Constant.EVT_GR8_ID8_CH8_INT32.getValue()) {
 			return 10;
-		} else if (type < LogBuffer.EVT_TICK64) {
+		} else if (type < Constant.EVT_TICK64.getValue()) {
 			return 11;
-		} else if (type < LogBuffer.EVT_CH8_REAL64) {
+		} else if (type < Constant.EVT_CH8_REAL64.getValue()) {
 			return 12;
-		} else if (type < LogBuffer.EVT_ID8_CH8_REAL64) {
+		} else if (type < Constant.EVT_ID8_CH8_REAL64.getValue()) {
 			return 13;
-		} else if (type < LogBuffer.EVT_GR8_ID8_CH8_REAL64) {
+		} else if (type < Constant.EVT_GR8_ID8_CH8_REAL64.getValue()) {
 			return 14;
-		} else if (type < LogBuffer.EVT_GR8_ID8_CH16_REAL64) {
+		} else if (type < Constant.EVT_GR8_ID8_CH16_REAL64.getValue()) {
 			return 15;
-		} else if (type < LogBuffer.EVT_GR8_ID16_CH16_REAL64) {
+		} else if (type < Constant.EVT_GR8_ID16_CH16_REAL64.getValue()) {
 			return 16;
-		} else if (type < LogBuffer.EVT_GR16_ID16_CH16_TICK32_INT32) {
+		} else if (type < Constant.EVT_GR16_ID16_CH16_TICK32_INT32.getValue()) {
 			return 17;
-		} else if (type < LogBuffer.EVT_GR8_ID8_CH8_TICK32_REAL64) {
+		} else if (type < Constant.EVT_GR8_ID8_CH8_TICK32_REAL64.getValue()) {
 			return 18;
-		} else if (type < LogBuffer.EVT_GR8_ID8_CH16_TICK32_REAL64) {
+		} else if (type < Constant.EVT_GR8_ID8_CH16_TICK32_REAL64.getValue()) {
 			return 19;
-		} else if (type < LogBuffer.EVT_GR8_ID16_CH16_TICK32_REAL64) {
+		} else if (type < Constant.EVT_GR8_ID16_CH16_TICK32_REAL64.getValue()) {
 			return 20;
-		} else if (type < LogBuffer.EVT_ID8_CH8_TICK64_REAL64) {
+		} else if (type < Constant.EVT_ID8_CH8_TICK64_REAL64.getValue()) {
 			return 21;
-		} else if (type < LogBuffer.EVT_GR8_ID8_CH8_TICK64_REAL64) {
+		} else if (type < Constant.EVT_GR8_ID8_CH8_TICK64_REAL64.getValue()) {
 			return 22;
-		} else if (type < LogBuffer.EVT_ID16_CH16_TICK64_REAL64) {
+		} else if (type < Constant.EVT_ID16_CH16_TICK64_REAL64.getValue()) {
 			return 23;
-		} else if (type < LogBuffer.EVT_GR8_ID16_CH16_TICK64_REAL64) {
+		} else if (type < Constant.EVT_GR8_ID16_CH16_TICK64_REAL64.getValue()) {
 			return 24;
-		} else if (type < LogBuffer.EVT_GR16_ID16_CH16_TICK64_INT64) {
+		} else if (type < Constant.EVT_GR16_ID16_CH16_TICK64_INT64.getValue()) {
 			return 25;
-		} else if (type < LogBuffer.EVT_CH8_STRING) {
+		} else if (type < Constant.EVT_CH8_STRING.getValue()) {
 			return 26;
 		} else {
 			return -1;
@@ -386,17 +390,7 @@ public class TestClient {
 	}
 
 	private void readPacketFromByteBuffer() {
-
-		System.out.println("Packet received, length = " + expectedLength);
-
-		final Packet packet = new Packet();
-
-		packet.setTime(new Date().getTime());
-
-		//TODO: Read packet from bytes
-
-		firePacketReceived(packet);
-
+		firePacketReceived(packetFactory.createPacket(byteBuffer, expectedLength));
 	}
 
 	public interface TestClientListener {

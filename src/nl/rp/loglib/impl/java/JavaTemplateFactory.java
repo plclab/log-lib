@@ -231,17 +231,17 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 	}
 
-	public Map<String, Object> getEvtMethod(String evtConstant) {
+	public Map<String, Object> getEvtMethod(Constant evtConstant) {
 
 		String methodName = "";
 
-		final Key[] keys = Key.stringToKeys(evtConstant);
+		final Key[] keys = Key.stringToKeys(evtConstant.name());
 		final int length = Key.getDataLength(keys) + 4;
 
 		final List<Variable> args = new ArrayList<Variable>();	
 
 		final List<String> evtInstructions = new ArrayList<String>();
-		addEvtInstruction(evtInstructions, evtConstant, false, false);
+		addEvtInstruction(evtInstructions, evtConstant.name(), false, false);
 
 		String fullName;
 		for (Key key : keys) {
@@ -259,6 +259,10 @@ public class JavaTemplateFactory extends TemplateFactory {
 				break;
 
 			case NULL:
+				methodName += key.shortName;
+				break;
+
+			case FULL:
 				methodName += key.shortName;
 				break;
 
@@ -372,9 +376,17 @@ public class JavaTemplateFactory extends TemplateFactory {
 
 		final List<String> instructions = new ArrayList<>();
 		method.put("instructions", instructions);
-		instructions.add("if (getNextWritePointer(" + length + ")) {");
-		instructions.addAll(evtInstructions);
-		instructions.add("}");
+		if (evtConstant == Constant.EVT_FULL) {
+			instructions.add("if (getNextWritePointer(" + length + ")) {");
+			instructions.addAll(evtInstructions);
+			instructions.add("}");
+		} else {
+			instructions.add("if (getNextWritePointer(" + (length + 4) + ")) {");
+			instructions.addAll(evtInstructions);
+			instructions.add("} else {");
+			instructions.add(TAB + "evtFull();");
+			instructions.add("}");
+		}
 
 		return method;
 

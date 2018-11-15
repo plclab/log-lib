@@ -10,6 +10,7 @@ public class LogBuffer {
     public static final byte MAGIC_BYTE_V1_BIG_ENDIAN = 113;
     public static final byte END_FLAG = -2;
     public static final byte EVT_NULL = 0;
+    public static final byte EVT_FULL = 1;
     public static final byte EVT_CH8_BOOL8 = 8;
     public static final byte EVT_CH8_INT8 = 9;
     public static final byte EVT_CH8_UINT8 = 10;
@@ -318,15 +319,25 @@ public class LogBuffer {
     }
 
     protected void evtNull() {
-        if (getNextWritePointer(4)) {
+        if (getNextWritePointer(8)) {
             buffer[i] = EVT_NULL;
+            buffer[++i] = END_FLAG;
+            bufferWritePointer = i;
+        } else {
+            evtFull();
+        }
+    }
+
+    protected void evtFull() {
+        if (getNextWritePointer(4)) {
+            buffer[i] = EVT_FULL;
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
         }
     }
 
     protected void evtTick32(int tick) {
-        if (getNextWritePointer(8)) {
+        if (getNextWritePointer(12)) {
             buffer[i] = EVT_TICK32;
             buffer[++i] = (byte)(tick & 0xff);
             buffer[++i] = (byte)((tick >> 8) & 0xff);
@@ -334,11 +345,13 @@ public class LogBuffer {
             buffer[++i] = (byte)((tick >> 24) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtCh8Tick32Bool8(byte channel, int tick, boolean value) {
-        if (getNextWritePointer(10)) {
+        if (getNextWritePointer(14)) {
             buffer[i] = EVT_CH8_TICK32_BOOL8;
             buffer[++i] = channel;
             buffer[++i] = (byte)(tick & 0xff);
@@ -348,11 +361,13 @@ public class LogBuffer {
             buffer[++i] = (byte)(value? 1:0);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtCh8Tick32Int16(byte channel, int tick, short value) {
-        if (getNextWritePointer(11)) {
+        if (getNextWritePointer(15)) {
             buffer[i] = EVT_CH8_TICK32_INT16;
             buffer[++i] = channel;
             buffer[++i] = (byte)(tick & 0xff);
@@ -363,11 +378,13 @@ public class LogBuffer {
             buffer[++i] = (byte)((value >> 8) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtCh8Tick32Int32(byte channel, int tick, int value) {
-        if (getNextWritePointer(13)) {
+        if (getNextWritePointer(17)) {
             buffer[i] = EVT_CH8_TICK32_INT32;
             buffer[++i] = channel;
             buffer[++i] = (byte)(tick & 0xff);
@@ -380,11 +397,13 @@ public class LogBuffer {
             buffer[++i] = (byte)((value >> 24) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtCh8Tick32UInt32(byte channel, int tick, int value) {
-        if (getNextWritePointer(13)) {
+        if (getNextWritePointer(17)) {
             buffer[i] = EVT_CH8_TICK32_UINT32;
             buffer[++i] = channel;
             buffer[++i] = (byte)(tick & 0xff);
@@ -397,11 +416,13 @@ public class LogBuffer {
             buffer[++i] = (byte)((value >> 24) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtCh16Tick32Bool8(short channel, int tick, boolean value) {
-        if (getNextWritePointer(11)) {
+        if (getNextWritePointer(15)) {
             buffer[i] = EVT_CH16_TICK32_BOOL8;
             buffer[++i] = (byte)(channel & 0xff);
             buffer[++i] = (byte)((channel >> 8) & 0xff);
@@ -412,11 +433,13 @@ public class LogBuffer {
             buffer[++i] = (byte)(value? 1:0);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtCh16Tick32Int16(short channel, int tick, short value) {
-        if (getNextWritePointer(12)) {
+        if (getNextWritePointer(16)) {
             buffer[i] = EVT_CH16_TICK32_INT16;
             buffer[++i] = (byte)(channel & 0xff);
             buffer[++i] = (byte)((channel >> 8) & 0xff);
@@ -428,11 +451,13 @@ public class LogBuffer {
             buffer[++i] = (byte)((value >> 8) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtCh16Tick32Int32(short channel, int tick, int value) {
-        if (getNextWritePointer(14)) {
+        if (getNextWritePointer(18)) {
             buffer[i] = EVT_CH16_TICK32_INT32;
             buffer[++i] = (byte)(channel & 0xff);
             buffer[++i] = (byte)((channel >> 8) & 0xff);
@@ -446,11 +471,13 @@ public class LogBuffer {
             buffer[++i] = (byte)((value >> 24) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtCh16Tick32UInt32(short channel, int tick, int value) {
-        if (getNextWritePointer(14)) {
+        if (getNextWritePointer(18)) {
             buffer[i] = EVT_CH16_TICK32_UINT32;
             buffer[++i] = (byte)(channel & 0xff);
             buffer[++i] = (byte)((channel >> 8) & 0xff);
@@ -464,11 +491,13 @@ public class LogBuffer {
             buffer[++i] = (byte)((value >> 24) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtGr8Id8Ch8Tick32Bool8(byte group, byte id, byte channel, int tick, boolean value) {
-        if (getNextWritePointer(12)) {
+        if (getNextWritePointer(16)) {
             buffer[i] = EVT_GR8_ID8_CH8_TICK32_BOOL8;
             buffer[++i] = group;
             buffer[++i] = id;
@@ -480,11 +509,13 @@ public class LogBuffer {
             buffer[++i] = (byte)(value? 1:0);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtGr8Id8Ch8Tick32Int16(byte group, byte id, byte channel, int tick, short value) {
-        if (getNextWritePointer(13)) {
+        if (getNextWritePointer(17)) {
             buffer[i] = EVT_GR8_ID8_CH8_TICK32_INT16;
             buffer[++i] = group;
             buffer[++i] = id;
@@ -497,11 +528,13 @@ public class LogBuffer {
             buffer[++i] = (byte)((value >> 8) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtGr8Id8Ch8Tick32Int32(byte group, byte id, byte channel, int tick, int value) {
-        if (getNextWritePointer(15)) {
+        if (getNextWritePointer(19)) {
             buffer[i] = EVT_GR8_ID8_CH8_TICK32_INT32;
             buffer[++i] = group;
             buffer[++i] = id;
@@ -516,11 +549,13 @@ public class LogBuffer {
             buffer[++i] = (byte)((value >> 24) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtGr8Id8Ch8Tick32UInt32(byte group, byte id, byte channel, int tick, int value) {
-        if (getNextWritePointer(15)) {
+        if (getNextWritePointer(19)) {
             buffer[i] = EVT_GR8_ID8_CH8_TICK32_UINT32;
             buffer[++i] = group;
             buffer[++i] = id;
@@ -535,11 +570,13 @@ public class LogBuffer {
             buffer[++i] = (byte)((value >> 24) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtGr8Id8Ch16Tick32Bool8(byte group, byte id, short channel, int tick, boolean value) {
-        if (getNextWritePointer(13)) {
+        if (getNextWritePointer(17)) {
             buffer[i] = EVT_GR8_ID8_CH16_TICK32_BOOL8;
             buffer[++i] = group;
             buffer[++i] = id;
@@ -552,11 +589,13 @@ public class LogBuffer {
             buffer[++i] = (byte)(value? 1:0);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtGr8Id8Ch16Tick32Int16(byte group, byte id, short channel, int tick, short value) {
-        if (getNextWritePointer(14)) {
+        if (getNextWritePointer(18)) {
             buffer[i] = EVT_GR8_ID8_CH16_TICK32_INT16;
             buffer[++i] = group;
             buffer[++i] = id;
@@ -570,11 +609,13 @@ public class LogBuffer {
             buffer[++i] = (byte)((value >> 8) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtGr8Id8Ch16Tick32Int32(byte group, byte id, short channel, int tick, int value) {
-        if (getNextWritePointer(16)) {
+        if (getNextWritePointer(20)) {
             buffer[i] = EVT_GR8_ID8_CH16_TICK32_INT32;
             buffer[++i] = group;
             buffer[++i] = id;
@@ -590,11 +631,13 @@ public class LogBuffer {
             buffer[++i] = (byte)((value >> 24) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 
     protected void evtGr8Id8Ch16Tick32UInt32(byte group, byte id, short channel, int tick, int value) {
-        if (getNextWritePointer(16)) {
+        if (getNextWritePointer(20)) {
             buffer[i] = EVT_GR8_ID8_CH16_TICK32_UINT32;
             buffer[++i] = group;
             buffer[++i] = id;
@@ -610,6 +653,8 @@ public class LogBuffer {
             buffer[++i] = (byte)((value >> 24) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
+        } else {
+            evtFull();
         }
     }
 

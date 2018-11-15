@@ -35,6 +35,8 @@ import nl.rp.loglib.java.TestServer.TestServerListener;
 @SuppressWarnings("serial")
 public class ServerPanel extends JPanel {
 
+	public static final Iterable<Constant> AVAILABLE_CONSTANTS = Constant.CORE_EVENTS_DEFAULT;
+
 	private final TestServer testServer;
 
 	private final JSpinner portSpinner;
@@ -207,15 +209,16 @@ public class ServerPanel extends JPanel {
 		private final JSpinner floatValuesSpinner;
 		private final JTextField stringValuesTextField;
 		private final JCheckBox randomValuesCheckBox;
-
+		private final JComboBox<String> eventListComboBox;
 		private final JComboBox<String> eventComboBox;
+		private final JButton addEventButton;
 
 		private long autoUpdateTickStart = System.currentTimeMillis();
 
 		private final List<JComponent> activeValueComponents = new ArrayList<>();
 
 		private final Random random = new Random();
-		
+
 
 		public EventPanel() {
 
@@ -379,7 +382,7 @@ public class ServerPanel extends JPanel {
 			valueDataTypeComboBox.addItem(DataType.UINT64);
 			valueDataTypeComboBox.addItem(DataType.REAL64);
 			valueDataTypeComboBox.addItem(DataType.STRING);
-			valueDataTypeComboBox.setSelectedItem(DataType.REAL32);
+			valueDataTypeComboBox.setSelectedItem(DataType.INT32);
 			valueDataTypeComboBox.addActionListener(new ActionListener() {
 
 				@Override
@@ -407,11 +410,22 @@ public class ServerPanel extends JPanel {
 			randomValuesCheckBox = new JCheckBox("Random values");
 			randomValuesCheckBox.setSelected(true);
 
+			add(new JLabel("Lib, Event"), new GridBagConstraints(5, 5, 1, 1, 0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 3), 0, 0));
+
+			//TODO
+			eventListComboBox = new JComboBox<>();
+			add(eventListComboBox, new GridBagConstraints(7, 5, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(1, 0, 1, 0), 0, 0));
+			eventListComboBox.addItem("core-min");
+			eventListComboBox.addItem("core");
+			eventListComboBox.addItem("core-ext");
+			eventListComboBox.addItem("core-ext-notick");
+			eventListComboBox.addItem("core-ext-tick32");
+			eventListComboBox.setSelectedIndex(1);
+
 			eventComboBox = new JComboBox<>();
-			add(new JLabel("Event"), new GridBagConstraints(5, 5, 1, 1, 0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 3), 0, 0));
-			add(eventComboBox, new GridBagConstraints(7, 5, 3, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(1, 0, 1, 0), 0, 0));
+			add(eventComboBox, new GridBagConstraints(9, 5, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(1, 0, 1, 0), 0, 0));
 			eventComboBox.addItem("Unknown event..");
-			for (Constant constant : Constant.values()) {
+			for (Constant constant : AVAILABLE_CONSTANTS) {
 				if (constant.name().startsWith(Key.EVT.name())) {
 					eventComboBox.addItem(constant.name());
 				}
@@ -430,17 +444,25 @@ public class ServerPanel extends JPanel {
 				}
 			});
 
-			final JButton addEvtButton = new JButton("Add event");
-			add(addEvtButton, new GridBagConstraints(12, 5, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-			addEvtButton.addActionListener(new ActionListener() {
+			addEventButton = new JButton("Add event");
+			add(addEventButton, new GridBagConstraints(12, 5, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			addEventButton.addActionListener(new ActionListener() {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
 
 					final Constant selectedConstant = getSelectedEvent();
 					if (selectedConstant != null) {
-						testServer.createEvent(selectedConstant);
+
+						testServer.createEvent(selectedConstant,
+								getSelectedGroup(),
+								getSelectedId(),
+								getSelectedChannel(),
+								getSelectedTick(),
+								getSelectedValue());
+
 						refreshUI();
+
 					}
 
 				}
@@ -486,14 +508,35 @@ public class ServerPanel extends JPanel {
 					break;
 
 				case INT8:
+					integerValuesSpinner.setValue(Byte.MIN_VALUE + random.nextInt((int)Math.pow(2, 8)));
+					break;
+
 				case UINT8:
+					integerValuesSpinner.setValue(random.nextInt((int)Math.pow(2, 8)));
+					break;
+
 				case INT16:
+					integerValuesSpinner.setValue(Short.MIN_VALUE + random.nextInt((int)Math.pow(2, 16)));
+					break;
+
 				case UINT16:
+					integerValuesSpinner.setValue(random.nextInt((int)Math.pow(2, 16)));
+					break;
+
 				case INT32:
+					integerValuesSpinner.setValue(Integer.MIN_VALUE + (2 * random.nextInt((int)Math.pow(2, 31))));
+					break;
+
 				case UINT32:
+					integerValuesSpinner.setValue(2 * (long)random.nextInt((int)Math.pow(2, 31)));
+					break;
+
 				case INT64:
+					integerValuesSpinner.setValue(random.nextLong());
+					break;
+
 				case UINT64:
-					integerValuesSpinner.setValue(random.nextInt(Integer.MAX_VALUE)); //TODO: Handle DataType bounds
+					integerValuesSpinner.setValue(0); //TODO
 					break;
 
 				case REAL32:
@@ -507,10 +550,11 @@ public class ServerPanel extends JPanel {
 
 				default:
 					break;
+
 				}
 
 			}
-			
+
 		}
 
 		private void updateValueComponents() {
@@ -563,6 +607,7 @@ public class ServerPanel extends JPanel {
 
 				default:
 					break;
+
 				}
 
 			}
@@ -583,6 +628,13 @@ public class ServerPanel extends JPanel {
 			return null;
 		}
 
+		private Integer getSelectedGroup() {
+			if (groupSpinner.isEnabled()) {
+				return ((Number)groupSpinner.getValue()).intValue();
+			}
+			return null;
+		}
+
 		private DataType getSelectedIdDataType() {
 			if (idSpinner.isEnabled()) {
 				if ((int)idSpinner.getValue() < 256) {
@@ -590,6 +642,13 @@ public class ServerPanel extends JPanel {
 				} else if ((int)idSpinner.getValue() < 65536) {
 					return DataType.UINT16;
 				}
+			}
+			return null;
+		}
+
+		private Integer getSelectedId() {
+			if (idSpinner.isEnabled()) {
+				return ((Number)idSpinner.getValue()).intValue();
 			}
 			return null;
 		}
@@ -605,12 +664,26 @@ public class ServerPanel extends JPanel {
 			return null;
 		}
 
+		private Integer getSelectedChannel() {
+			if (channelSpinner.isEnabled()) {
+				return ((Number)channelSpinner.getValue()).intValue();
+			}
+			return null;
+		}
+
 		private DataType getSelectedTickDataType() {
 			if (tickDataTypeComboBox.isEnabled()) {
 				final Object selectedTickDataType = tickDataTypeComboBox.getSelectedItem();
 				if (selectedTickDataType != null && selectedTickDataType instanceof DataType) {
 					return (DataType)selectedTickDataType;
 				}
+			}
+			return null;
+		}
+
+		private Long getSelectedTick() {
+			if (tickSpinner.isEnabled()) {
+				return ((Number)tickSpinner.getValue()).longValue();
 			}
 			return null;
 		}
@@ -623,6 +696,48 @@ public class ServerPanel extends JPanel {
 				}
 			}
 			return null;
+		}
+
+		private Object getSelectedValue() {
+
+			if (valueCheckBox.isSelected()) {
+
+				final DataType valueDataType = getSelectedValueDataType();
+				if (valueDataType != null) {
+
+					switch (valueDataType) {
+
+					case BOOL8:
+						return booleanValuesComboBox.getSelectedItem();
+
+					case INT8:
+					case UINT8:
+					case INT16:
+					case UINT16:
+					case INT32:
+					case UINT32:
+					case INT64:
+					case UINT64:
+						return integerValuesSpinner.getValue();
+
+					case REAL32:
+					case REAL64:
+						return floatValuesSpinner.getValue();
+
+					case STRING:
+						return stringValuesTextField.getText();
+
+					default:
+						break;
+
+					}
+
+				}
+
+			}
+
+			return null;
+
 		}
 
 		private Constant getSelectedEvent() {
@@ -648,6 +763,8 @@ public class ServerPanel extends JPanel {
 			} else {
 				eventComboBox.setSelectedIndex(0);
 			}
+
+			addEventButton.setEnabled(eventComboBox.getSelectedIndex() > 0);
 
 		}
 
@@ -725,7 +842,23 @@ public class ServerPanel extends JPanel {
 			if (tickKey != null) constantName += "_" + tickKey.name();
 			if (valueKey != null) constantName += "_" + valueKey.name();
 
-			return Constant.getConstantForName(constantName);
+			return findAvailableConstantForName(constantName);
+
+		}
+
+		private Constant findAvailableConstantForName(String name) {
+
+			if (name == null || name.length() == 0) {
+				return null;
+			}
+
+			for (Constant constant : AVAILABLE_CONSTANTS) {
+				if (name.equals(constant.name())) {
+					return constant;
+				}
+			}
+
+			return null;
 
 		}
 

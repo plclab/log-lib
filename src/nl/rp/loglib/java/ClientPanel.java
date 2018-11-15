@@ -29,6 +29,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 
+import nl.rp.loglib.Constant;
 import nl.rp.loglib.java.TestClient.TestClientListener;
 
 @SuppressWarnings("serial")
@@ -123,10 +124,13 @@ public class ClientPanel extends JPanel {
 		packetsTable.setShowGrid(false);
 		packetsTable.setFillsViewportHeight(true);
 
-		packetsTable.getColumnModel().getColumn(COL_TIME).setPreferredWidth(135);
-		packetsTable.getColumnModel().getColumn(COL_GROUP).setPreferredWidth(30);
-		packetsTable.getColumnModel().getColumn(COL_ID).setPreferredWidth(30);
-		packetsTable.getColumnModel().getColumn(COL_CHANNEL).setPreferredWidth(30);
+		packetsTable.getColumnModel().getColumn(COL_TIME).setPreferredWidth(140);
+		packetsTable.getColumnModel().getColumn(COL_TYPE).setPreferredWidth(150);
+		packetsTable.getColumnModel().getColumn(COL_GROUP).setPreferredWidth(20);
+		packetsTable.getColumnModel().getColumn(COL_ID).setPreferredWidth(20);
+		packetsTable.getColumnModel().getColumn(COL_CHANNEL).setPreferredWidth(20);
+		packetsTable.getColumnModel().getColumn(COL_TICK).setPreferredWidth(100);
+		packetsTable.getColumnModel().getColumn(COL_VALUE).setPreferredWidth(150);
 
 		packetsTable.addKeyListener(new KeyAdapter() {
 
@@ -173,12 +177,18 @@ public class ClientPanel extends JPanel {
 					@Override
 					public void run() {
 
-						final int oldSize = packets.size();
-						packets.add(packet);
-						packetsTableModel.fireTableRowsInserted(oldSize, packets.size() - 1);
+						if (packet != null) {
 
-						if (packetsTable.getSelectedRowCount() == 0) {							
-							scrollPacketsTableToLastRow();
+							final int oldSize = packets.size();
+							packets.add(packet);
+							packetsTableModel.fireTableRowsInserted(oldSize, packets.size() - 1);
+
+							if (packetsTable.getSelectedRowCount() == 0) {							
+								scrollPacketsTableToLastRow();
+							}
+
+						} else {
+							System.err.println("Received packet is null");
 						}
 
 					}
@@ -320,7 +330,12 @@ public class ClientPanel extends JPanel {
 					break;
 
 				case COL_TYPE:
-					setText("");
+					final Constant constant = Constant.getEventConstantForType(packet.getType());
+					if (constant != null) {						
+						setText(constant.name());
+					} else {
+						setText("Unknown..");
+					}
 					break;
 
 				case COL_GROUP:
@@ -344,11 +359,13 @@ public class ClientPanel extends JPanel {
 					break;
 
 				default: 
-					setText("");
+					setText("...");
 					break;
 
 				}
 
+			} else {
+				setText("...");
 			}
 
 			return this;

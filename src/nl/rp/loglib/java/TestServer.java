@@ -166,12 +166,132 @@ public class TestServer {
 
 	}
 
-	public void createEvent(Constant evtConstant) {
+	public void createEvent(Constant evtConstant, Integer group, Integer id, Integer channel, Long tick, Object value) {
 
 		switch (evtConstant) {
 
 		case EVT_NULL:
 			logBuffer.evtNull();
+			break;
+
+		case EVT_FULL:
+			logBuffer.evtFull();
+			break;
+
+		case EVT_TICK32:
+			logBuffer.evtTick32(tick.intValue());
+			break;
+
+		case EVT_CH8_TICK32_BOOL8:
+			logBuffer.evtCh8Tick32Bool8(channel.byteValue(), tick.intValue(), (Boolean)value);
+			break;
+
+		case EVT_CH8_TICK32_INT16:
+			logBuffer.evtCh8Tick32Int16(channel.byteValue(), tick.intValue(), ((Number)value).shortValue());
+			break;
+
+		case EVT_CH8_TICK32_INT32:
+			logBuffer.evtCh8Tick32Int32(channel.byteValue(), tick.intValue(), ((Number)value).intValue());
+			break;
+
+		case EVT_CH8_TICK32_UINT32:
+			logBuffer.evtCh8Tick32UInt32(channel.byteValue(), tick.intValue(), ((Number)value).intValue()); //TODO
+			break;
+
+		case EVT_CH8_TICK32_REAL32:
+			//logBuffer.evtCh8Tick32Real32(channel.byteValue(), tick.intValue(), (Float)value); //TODO
+			break;
+
+		case EVT_CH8_TICK32_REAL64:
+			//logBuffer.evtCh8Tick32Real64(channel.byteValue(), tick.intValue(), (Double)value); //TODO
+			break;
+
+		case EVT_CH8_TICK32_STRING:
+			//logBuffer.evtCh8Tick32String(channel.byteValue(), tick.intValue(), (String)value); //TODO
+			break;
+
+		case EVT_CH16_TICK32_BOOL8:
+			logBuffer.evtCh16Tick32Bool8(channel.shortValue(), tick.intValue(), (Boolean)value);
+			break;
+
+		case EVT_CH16_TICK32_INT16:
+			logBuffer.evtCh16Tick32Int16(channel.shortValue(), tick.intValue(), ((Number)value).shortValue());
+			break;
+
+		case EVT_CH16_TICK32_INT32:
+			logBuffer.evtCh16Tick32Int32(channel.shortValue(), tick.intValue(), ((Number)value).intValue());
+			break;
+
+		case EVT_CH16_TICK32_UINT32:
+			logBuffer.evtCh16Tick32UInt32(channel.shortValue(), tick.intValue(), ((Number)value).intValue()); //TODO
+			break;
+
+		case EVT_CH16_TICK32_REAL32:
+			//logBuffer.evtCh16Tick32Real32(channel.shortValue(), tick.intValue(), (Float)value); //TODO
+			break;
+
+		case EVT_CH16_TICK32_REAL64:
+			//logBuffer.evtCh16Tick32Real64(channel.shortValue(), tick.intValue(), (Double)value); //TODO
+			break;
+
+		case EVT_CH16_TICK32_STRING:
+			//logBuffer.evtCh16Tick32String(channel.shortValue(), tick.intValue(), (String)value); //TODO
+			break;
+
+		case EVT_GR8_ID8_CH8_TICK32_BOOL8:
+			logBuffer.evtGr8Id8Ch8Tick32Bool8(group.byteValue(), id.byteValue(), channel.byteValue(), tick.intValue(), (Boolean)value);
+			break;
+
+		case EVT_GR8_ID8_CH8_TICK32_INT16:
+			logBuffer.evtGr8Id8Ch8Tick32Int16(group.byteValue(), id.byteValue(), channel.byteValue(), tick.intValue(), ((Number)value).shortValue());
+			break;
+
+		case EVT_GR8_ID8_CH8_TICK32_INT32:
+			logBuffer.evtGr8Id8Ch8Tick32Int32(group.byteValue(), id.byteValue(), channel.byteValue(), tick.intValue(), ((Number)value).intValue());
+			break;
+
+		case EVT_GR8_ID8_CH8_TICK32_UINT32:
+			logBuffer.evtGr8Id8Ch8Tick32UInt32(group.byteValue(), id.byteValue(), channel.byteValue(), tick.intValue(), ((Number)value).intValue());
+			break;
+
+		case EVT_GR8_ID8_CH8_TICK32_REAL32:
+			//logBuffer.evtGr8Id8Ch8Tick32Real32(group.byteValue(), id.byteValue(), channel.byteValue(), tick.intValue(), (Float)value); //TODO
+			break;
+
+		case EVT_GR8_ID8_CH8_TICK32_REAL64:
+			//logBuffer.evtGr8Id8Ch8Tick32Real64(group.byteValue(), id.byteValue(), channel.byteValue(), tick.intValue(), (Double)value); //TODO
+			break;
+
+		case EVT_GR8_ID8_CH8_TICK32_STRING:
+			//logBuffer.evtGr8Id8Ch8Tick32String(group.byteValue(), id.byteValue(), channel.byteValue(), tick.intValue(), (String)value); //TODO
+			break;
+
+		case EVT_GR8_ID8_CH16_TICK32_BOOL8:
+			logBuffer.evtGr8Id8Ch16Tick32Bool8(group.byteValue(), id.byteValue(), channel.shortValue(), tick.intValue(), (Boolean)value);
+			break;
+
+		case EVT_GR8_ID8_CH16_TICK32_INT16:
+			logBuffer.evtGr8Id8Ch16Tick32Int16(group.byteValue(), id.byteValue(), channel.shortValue(), tick.intValue(), ((Number)value).shortValue());
+			break;
+
+		case EVT_GR8_ID8_CH16_TICK32_INT32:
+			logBuffer.evtGr8Id8Ch16Tick32Int32(group.byteValue(), id.byteValue(), channel.shortValue(), tick.intValue(), ((Number)value).intValue());
+			break;
+
+		case EVT_GR8_ID8_CH16_TICK32_UINT32:
+			logBuffer.evtGr8Id8Ch16Tick32UInt32(group.byteValue(), id.byteValue(), channel.shortValue(), tick.intValue(), ((Number)value).intValue()); //TODO
+			break;
+
+		case EVT_GR8_ID8_CH16_TICK32_REAL32:
+			//logBuffer.evtGr8Id8Ch16Tick32Real32(group.byteValue(), id.byteValue(), channel.shortValue(), tick.intValue(), (Float)value); //TODO
+			break;
+
+		case EVT_GR8_ID8_CH16_TICK32_REAL64:
+			//logBuffer.evtGr8Id8Ch16Tick32Real64(group.byteValue(), id.byteValue(), channel.shortValue(), tick.intValue(), (Double)value); //TODO
+			break;
+
+		case EVT_GR8_ID8_CH16_TICK32_STRING:
+			//logBuffer.evtGr8Id8Ch16Tick32String(group.byteValue(), id.byteValue(), channel.shortValue(), tick.intValue(), (String)value); //TODO
 			break;
 
 		default:
