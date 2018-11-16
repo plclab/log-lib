@@ -431,7 +431,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 				return null; //TODO
 
 			default:
-				break;
+				return null;
 			}
 
 		}

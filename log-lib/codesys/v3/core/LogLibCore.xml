@@ -303,76 +303,6 @@ END_VAR
           </data>
         </addData>
       </pou>
-      <pou name="Evt" pouType="function">
-        <interface>
-          <returnType>
-            <BOOL />
-          </returnType>
-          <inOutVars>
-            <variable name="Handle">
-              <type>
-                <derived name="LogBufferHandle" />
-              </type>
-            </variable>
-          </inOutVars>
-          <localVars>
-            <variable name="i">
-              <type>
-                <derived name="DINT" />
-              </type>
-            </variable>
-            <variable name="p1">
-              <type>
-                <derived name="POINTER TO BYTE" />
-              </type>
-            </variable>
-          </localVars>
-        </interface>
-        <body>
-          <ST>
-            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(4, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
-IF i &gt;= 0 THEN
-
-    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
-
-    p1^ := START_FLAG;
-
-    p1 := p1 + 1;
-    p1^ := Handle.MagicByte;
-
-    p1 := p1 + 1;
-    p1^ := EVT_FULL;
-
-    p1 := p1 + 1;
-    p1^ := END_FLAG;
-
-    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
-
-END_IF
-</xhtml>
-          </ST>
-        </body>
-        <addData>
-          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
-            <InterfaceAsPlainText>
-              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION Evt : BOOL
-VAR_INPUT
-END_VAR
-VAR_IN_OUT
-    Handle: LogBufferHandle;
-END_VAR
-VAR
-    i: DINT;
-    p1: POINTER TO BYTE;
-END_VAR
-</xhtml>
-            </InterfaceAsPlainText>
-          </data>
-          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>4a5f0180-67e1-48c3-b868-eb02dce2a205</ObjectId>
-          </data>
-        </addData>
-      </pou>
       <pou name="EvtTick32" pouType="function">
         <interface>
           <returnType>
@@ -462,7 +392,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>ead853a7-6a9e-487a-96ef-ee591ca53136</ObjectId>
+            <ObjectId>4a5f0180-67e1-48c3-b868-eb02dce2a205</ObjectId>
           </data>
         </addData>
       </pou>
@@ -573,7 +503,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>e779905b-2ad6-4331-9624-d18198859098</ObjectId>
+            <ObjectId>ead853a7-6a9e-487a-96ef-ee591ca53136</ObjectId>
           </data>
         </addData>
       </pou>
@@ -689,7 +619,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>9864b1e0-377a-466c-a759-9a430429943f</ObjectId>
+            <ObjectId>e779905b-2ad6-4331-9624-d18198859098</ObjectId>
           </data>
         </addData>
       </pou>
@@ -806,7 +736,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>2daa6e7e-03db-4428-a646-2e2bf23bcdcb</ObjectId>
+            <ObjectId>9864b1e0-377a-466c-a759-9a430429943f</ObjectId>
           </data>
         </addData>
       </pou>
@@ -923,7 +853,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>4106ad30-1525-442e-a261-4af3082d9009</ObjectId>
+            <ObjectId>2daa6e7e-03db-4428-a646-2e2bf23bcdcb</ObjectId>
           </data>
         </addData>
       </pou>
@@ -1040,7 +970,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>8d36a3dc-e63f-41aa-9d4c-22d0c0153c34</ObjectId>
+            <ObjectId>4106ad30-1525-442e-a261-4af3082d9009</ObjectId>
           </data>
         </addData>
       </pou>
@@ -1157,7 +1087,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>568bda61-aa2c-4186-b672-37261dc86861</ObjectId>
+            <ObjectId>8d36a3dc-e63f-41aa-9d4c-22d0c0153c34</ObjectId>
           </data>
         </addData>
       </pou>
@@ -1273,7 +1203,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>7879d925-a66f-408a-95a1-ffb4198b1629</ObjectId>
+            <ObjectId>568bda61-aa2c-4186-b672-37261dc86861</ObjectId>
           </data>
         </addData>
       </pou>
@@ -1394,7 +1324,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>4a5a384a-8ed7-40c0-bc9a-9005c823dfb4</ObjectId>
+            <ObjectId>7879d925-a66f-408a-95a1-ffb4198b1629</ObjectId>
           </data>
         </addData>
       </pou>
@@ -1516,7 +1446,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>5a1f6c7d-852d-43a3-af12-3a9dfc54b73a</ObjectId>
+            <ObjectId>4a5a384a-8ed7-40c0-bc9a-9005c823dfb4</ObjectId>
           </data>
         </addData>
       </pou>
@@ -1638,7 +1568,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>e8ba672d-4d4d-4347-be6b-ba4cda253e66</ObjectId>
+            <ObjectId>5a1f6c7d-852d-43a3-af12-3a9dfc54b73a</ObjectId>
           </data>
         </addData>
       </pou>
@@ -1760,7 +1690,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>2c2f4674-f43c-438f-8186-a87d750c3d98</ObjectId>
+            <ObjectId>e8ba672d-4d4d-4347-be6b-ba4cda253e66</ObjectId>
           </data>
         </addData>
       </pou>
@@ -1882,7 +1812,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>d33bbb1c-d4d6-4047-98f5-48136184c050</ObjectId>
+            <ObjectId>2c2f4674-f43c-438f-8186-a87d750c3d98</ObjectId>
           </data>
         </addData>
       </pou>
@@ -2011,7 +1941,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>42b97492-c592-4389-b5f6-a43cecd61280</ObjectId>
+            <ObjectId>d33bbb1c-d4d6-4047-98f5-48136184c050</ObjectId>
           </data>
         </addData>
       </pou>
@@ -2145,7 +2075,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>8835469c-140e-400d-85e8-8f899fc90693</ObjectId>
+            <ObjectId>42b97492-c592-4389-b5f6-a43cecd61280</ObjectId>
           </data>
         </addData>
       </pou>
@@ -2280,7 +2210,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>560ad794-3c6e-47d3-9d30-8673c368cb3f</ObjectId>
+            <ObjectId>8835469c-140e-400d-85e8-8f899fc90693</ObjectId>
           </data>
         </addData>
       </pou>
@@ -2415,7 +2345,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>ef328249-9f51-4772-933b-7161f0d2e8e1</ObjectId>
+            <ObjectId>560ad794-3c6e-47d3-9d30-8673c368cb3f</ObjectId>
           </data>
         </addData>
       </pou>
@@ -2550,7 +2480,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>f5f1fef6-1744-44eb-af68-c78a1e2ca286</ObjectId>
+            <ObjectId>ef328249-9f51-4772-933b-7161f0d2e8e1</ObjectId>
           </data>
         </addData>
       </pou>
@@ -2685,7 +2615,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>a84e65bc-d6ed-4613-9982-03f00cbaab30</ObjectId>
+            <ObjectId>f5f1fef6-1744-44eb-af68-c78a1e2ca286</ObjectId>
           </data>
         </addData>
       </pou>
@@ -2819,7 +2749,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>3259d9a3-487c-4c9c-b748-326ce7729bea</ObjectId>
+            <ObjectId>a84e65bc-d6ed-4613-9982-03f00cbaab30</ObjectId>
           </data>
         </addData>
       </pou>
@@ -2958,7 +2888,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>307844f7-47fb-4048-a809-ad8a446677fe</ObjectId>
+            <ObjectId>3259d9a3-487c-4c9c-b748-326ce7729bea</ObjectId>
           </data>
         </addData>
       </pou>
@@ -3098,7 +3028,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>4bb17630-2f8e-4549-9855-d479450c4bf1</ObjectId>
+            <ObjectId>307844f7-47fb-4048-a809-ad8a446677fe</ObjectId>
           </data>
         </addData>
       </pou>
@@ -3238,7 +3168,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>37f0edc8-5767-4599-9f2c-5a65187e410a</ObjectId>
+            <ObjectId>4bb17630-2f8e-4549-9855-d479450c4bf1</ObjectId>
           </data>
         </addData>
       </pou>
@@ -3378,7 +3308,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>29d17a1d-d663-409d-b0d0-fa7e7f9af6e0</ObjectId>
+            <ObjectId>37f0edc8-5767-4599-9f2c-5a65187e410a</ObjectId>
           </data>
         </addData>
       </pou>
@@ -3518,7 +3448,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>62bc94bb-abce-4b14-886c-4ac7ef16da62</ObjectId>
+            <ObjectId>29d17a1d-d663-409d-b0d0-fa7e7f9af6e0</ObjectId>
           </data>
         </addData>
       </pou>
@@ -5562,32 +5492,31 @@ END_VAR
         <Folder Name="evt">
           <Object Name="GetNextWritePointer" ObjectId="2a5eb56b-152a-4435-a006-d971138a18e0" />
           <Object Name="EvtNull" ObjectId="7ad6c907-5e79-4b01-9b66-5967c0973536" />
-          <Object Name="Evt" ObjectId="4a5f0180-67e1-48c3-b868-eb02dce2a205" />
-          <Object Name="EvtTick32" ObjectId="ead853a7-6a9e-487a-96ef-ee591ca53136" />
-          <Object Name="EvtCh8Tick32Bool8" ObjectId="e779905b-2ad6-4331-9624-d18198859098" />
-          <Object Name="EvtCh8Tick32Int16" ObjectId="9864b1e0-377a-466c-a759-9a430429943f" />
-          <Object Name="EvtCh8Tick32Int32" ObjectId="2daa6e7e-03db-4428-a646-2e2bf23bcdcb" />
-          <Object Name="EvtCh8Tick32UInt32" ObjectId="4106ad30-1525-442e-a261-4af3082d9009" />
-          <Object Name="EvtCh8Tick32Real32" ObjectId="8d36a3dc-e63f-41aa-9d4c-22d0c0153c34" />
-          <Object Name="EvtCh8Tick32Real64" ObjectId="568bda61-aa2c-4186-b672-37261dc86861" />
-          <Object Name="EvtCh16Tick32Bool8" ObjectId="7879d925-a66f-408a-95a1-ffb4198b1629" />
-          <Object Name="EvtCh16Tick32Int16" ObjectId="4a5a384a-8ed7-40c0-bc9a-9005c823dfb4" />
-          <Object Name="EvtCh16Tick32Int32" ObjectId="5a1f6c7d-852d-43a3-af12-3a9dfc54b73a" />
-          <Object Name="EvtCh16Tick32UInt32" ObjectId="e8ba672d-4d4d-4347-be6b-ba4cda253e66" />
-          <Object Name="EvtCh16Tick32Real32" ObjectId="2c2f4674-f43c-438f-8186-a87d750c3d98" />
-          <Object Name="EvtCh16Tick32Real64" ObjectId="d33bbb1c-d4d6-4047-98f5-48136184c050" />
-          <Object Name="EvtGr8Id8Ch8Tick32Bool8" ObjectId="42b97492-c592-4389-b5f6-a43cecd61280" />
-          <Object Name="EvtGr8Id8Ch8Tick32Int16" ObjectId="8835469c-140e-400d-85e8-8f899fc90693" />
-          <Object Name="EvtGr8Id8Ch8Tick32Int32" ObjectId="560ad794-3c6e-47d3-9d30-8673c368cb3f" />
-          <Object Name="EvtGr8Id8Ch8Tick32UInt32" ObjectId="ef328249-9f51-4772-933b-7161f0d2e8e1" />
-          <Object Name="EvtGr8Id8Ch8Tick32Real32" ObjectId="f5f1fef6-1744-44eb-af68-c78a1e2ca286" />
-          <Object Name="EvtGr8Id8Ch8Tick32Real64" ObjectId="a84e65bc-d6ed-4613-9982-03f00cbaab30" />
-          <Object Name="EvtGr8Id8Ch16Tick32Bool8" ObjectId="3259d9a3-487c-4c9c-b748-326ce7729bea" />
-          <Object Name="EvtGr8Id8Ch16Tick32Int16" ObjectId="307844f7-47fb-4048-a809-ad8a446677fe" />
-          <Object Name="EvtGr8Id8Ch16Tick32Int32" ObjectId="4bb17630-2f8e-4549-9855-d479450c4bf1" />
-          <Object Name="EvtGr8Id8Ch16Tick32UInt32" ObjectId="37f0edc8-5767-4599-9f2c-5a65187e410a" />
-          <Object Name="EvtGr8Id8Ch16Tick32Real32" ObjectId="29d17a1d-d663-409d-b0d0-fa7e7f9af6e0" />
-          <Object Name="EvtGr8Id8Ch16Tick32Real64" ObjectId="62bc94bb-abce-4b14-886c-4ac7ef16da62" />
+          <Object Name="EvtTick32" ObjectId="4a5f0180-67e1-48c3-b868-eb02dce2a205" />
+          <Object Name="EvtCh8Tick32Bool8" ObjectId="ead853a7-6a9e-487a-96ef-ee591ca53136" />
+          <Object Name="EvtCh8Tick32Int16" ObjectId="e779905b-2ad6-4331-9624-d18198859098" />
+          <Object Name="EvtCh8Tick32Int32" ObjectId="9864b1e0-377a-466c-a759-9a430429943f" />
+          <Object Name="EvtCh8Tick32UInt32" ObjectId="2daa6e7e-03db-4428-a646-2e2bf23bcdcb" />
+          <Object Name="EvtCh8Tick32Real32" ObjectId="4106ad30-1525-442e-a261-4af3082d9009" />
+          <Object Name="EvtCh8Tick32Real64" ObjectId="8d36a3dc-e63f-41aa-9d4c-22d0c0153c34" />
+          <Object Name="EvtCh16Tick32Bool8" ObjectId="568bda61-aa2c-4186-b672-37261dc86861" />
+          <Object Name="EvtCh16Tick32Int16" ObjectId="7879d925-a66f-408a-95a1-ffb4198b1629" />
+          <Object Name="EvtCh16Tick32Int32" ObjectId="4a5a384a-8ed7-40c0-bc9a-9005c823dfb4" />
+          <Object Name="EvtCh16Tick32UInt32" ObjectId="5a1f6c7d-852d-43a3-af12-3a9dfc54b73a" />
+          <Object Name="EvtCh16Tick32Real32" ObjectId="e8ba672d-4d4d-4347-be6b-ba4cda253e66" />
+          <Object Name="EvtCh16Tick32Real64" ObjectId="2c2f4674-f43c-438f-8186-a87d750c3d98" />
+          <Object Name="EvtGr8Id8Ch8Tick32Bool8" ObjectId="d33bbb1c-d4d6-4047-98f5-48136184c050" />
+          <Object Name="EvtGr8Id8Ch8Tick32Int16" ObjectId="42b97492-c592-4389-b5f6-a43cecd61280" />
+          <Object Name="EvtGr8Id8Ch8Tick32Int32" ObjectId="8835469c-140e-400d-85e8-8f899fc90693" />
+          <Object Name="EvtGr8Id8Ch8Tick32UInt32" ObjectId="560ad794-3c6e-47d3-9d30-8673c368cb3f" />
+          <Object Name="EvtGr8Id8Ch8Tick32Real32" ObjectId="ef328249-9f51-4772-933b-7161f0d2e8e1" />
+          <Object Name="EvtGr8Id8Ch8Tick32Real64" ObjectId="f5f1fef6-1744-44eb-af68-c78a1e2ca286" />
+          <Object Name="EvtGr8Id8Ch16Tick32Bool8" ObjectId="a84e65bc-d6ed-4613-9982-03f00cbaab30" />
+          <Object Name="EvtGr8Id8Ch16Tick32Int16" ObjectId="3259d9a3-487c-4c9c-b748-326ce7729bea" />
+          <Object Name="EvtGr8Id8Ch16Tick32Int32" ObjectId="307844f7-47fb-4048-a809-ad8a446677fe" />
+          <Object Name="EvtGr8Id8Ch16Tick32UInt32" ObjectId="4bb17630-2f8e-4549-9855-d479450c4bf1" />
+          <Object Name="EvtGr8Id8Ch16Tick32Real32" ObjectId="37f0edc8-5767-4599-9f2c-5a65187e410a" />
+          <Object Name="EvtGr8Id8Ch16Tick32Real64" ObjectId="29d17a1d-d663-409d-b0d0-fa7e7f9af6e0" />
         </Folder>
         </Folder>
       </ProjectStructure>

@@ -378,7 +378,7 @@ public class JavaTemplateFactory extends TemplateFactory {
 				return null; //TODO
 
 			default:
-				break;
+				return null;
 			}
 
 		}

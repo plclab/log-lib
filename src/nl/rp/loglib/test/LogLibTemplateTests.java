@@ -13,6 +13,7 @@ import nl.rp.loglib.impl.codesys.v2.CoDeSysV2;
 import nl.rp.loglib.impl.codesys.v3.CoDeSysV3;
 import nl.rp.loglib.impl.java.Java;
 import nl.rp.loglib.impl.siemens.s71200.SiemensS71200;
+import nl.rp.loglib.impl.siemens.s7300.im1518.SiemensS7300IM1518;
 
 public class LogLibTemplateTests {
 
@@ -89,9 +90,9 @@ public class LogLibTemplateTests {
 		new File("log-lib/siemens/s7-1200/core").mkdirs();
 
 		//Siemens S7 300 IM151-8
-		new File("log-lib/siemens/s7-300/IM151-8/basic").mkdirs();
-		new File("log-lib/siemens/s7-300/IM151-8/comm/tcp").mkdirs();
-		new File("log-lib/siemens/s7-300/IM151-8/core").mkdirs();
+		new File("log-lib/siemens/s7-300/im151-8/basic").mkdirs();
+		new File("log-lib/siemens/s7-300/im151-8/comm/tcp").mkdirs();
+		new File("log-lib/siemens/s7-300/im151-8/core").mkdirs();
 
 		//Java
 		new File("log-lib/java/basic").mkdirs();
@@ -120,6 +121,9 @@ public class LogLibTemplateTests {
 		logLibImpl.generate(configuration);
 
 		logLibImpl = new SiemensS71200();
+		logLibImpl.generate(configuration);
+
+		logLibImpl = new SiemensS7300IM1518();
 		logLibImpl.generate(configuration);
 
 	}

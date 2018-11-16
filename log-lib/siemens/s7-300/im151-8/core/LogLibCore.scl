@@ -12,6 +12,7 @@ VERSION : 0.1
    VAR_TEMP 
       byteOrderInt : Int;
       byteOrderArray AT byteOrderInt : Array[0..1] OF Byte;
+      i : DInt;
    END_VAR
 
 
@@ -24,6 +25,30 @@ BEGIN
 	    #Handle.MagicByte := 112;
 	ELSE
 	    #Handle.MagicByte := 113;
+	END_IF;
+	
+	IF #Handle.BufferFull THEN
+	
+	#i := "GetNextWritePointer"(Length := 4, WritePointer := #Handle.BufferWritePointer, ReadPointer := #Handle.BufferReadPointer, BufferSize := #Handle.BufferSize, Overflow := #Handle.BufferOverflow);
+	IF #i >= 0 THEN
+	
+	    #Handle.Buffer[#i] := 255;
+	
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := #Handle.MagicByte;
+	
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 1;
+	
+	    #i := #i + 1;
+	    #Handle.Buffer[#i] := 254;
+	
+	    #Handle.BufferWritePointer := #i;
+	
+	    #Handle.BufferFull := FALSE;
+	
+	END_IF;
+	
 	END_IF;
 END_FUNCTION
 
@@ -88,39 +113,7 @@ BEGIN
 	    #Handle.BufferWritePointer := #i;
 	
 	ELSE
-	    "EvtFull"(Handle := #Handle);
-	END_IF;
-END_FUNCTION
-
-FUNCTION "EvtFull" : Void
-{ S7_Optimized_Access := 'FALSE' }
-VERSION : 0.1
-   VAR_IN_OUT
-      Handle : "LogBuffer";
-   END_VAR
-   
-   VAR_TEMP 
-      i : DInt;
-   END_VAR
-
-
-BEGIN
-	#i := "GetNextWritePointer"(Length := 4, WritePointer := #Handle.BufferWritePointer, ReadPointer := #Handle.BufferReadPointer, BufferSize := #Handle.BufferSize, Overflow := #Handle.BufferOverflow);
-	IF #i >= 0 THEN
-	
-	    #Handle.Buffer[#i] := 255;
-	
-	    #i := #i + 1;
-	    #Handle.Buffer[#i] := #Handle.MagicByte;
-	
-	    #i := #i + 1;
-	    #Handle.Buffer[#i] := 1;
-	
-	    #i := #i + 1;
-	    #Handle.Buffer[#i] := 254;
-	
-	    #Handle.BufferWritePointer := #i;
-	
+	    #Handle.BufferFull := TRUE;
 	END_IF;
 END_FUNCTION
 
@@ -128,8 +121,8 @@ FUNCTION "EvtCh16Tick32Bool8" : Void
 { S7_Optimized_Access := 'FALSE' }
 VERSION : 0.1
    VAR_INPUT 
-      Channel : UInt;
-      Tick : UDInt;
+      Channel : Int;
+      Tick : DInt;
       Value : Bool;
    END_VAR
 
@@ -139,9 +132,9 @@ VERSION : 0.1
    
    VAR_TEMP 
       i : DInt;
-      p2 : UInt;
+      p2 : Int;
       p2Bytes AT p2 : Array[0..1] of Byte;
-      p3 : UDInt;
+      p3 : DInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
    END_VAR
 
@@ -189,7 +182,7 @@ BEGIN
 	    #Handle.BufferWritePointer := #i;
 	
 	ELSE
-	    "EvtFull"(Handle := #Handle);
+	    #Handle.BufferFull := TRUE;
 	END_IF;
 END_FUNCTION
 
@@ -197,8 +190,8 @@ FUNCTION "EvtCh16Tick32Int32" : Void
 { S7_Optimized_Access := 'FALSE' }
 VERSION : 0.1
    VAR_INPUT 
-      Channel : UInt;
-      Tick : UDInt;
+      Channel : Int;
+      Tick : DInt;
       Value : Dint;
    END_VAR
 
@@ -208,9 +201,9 @@ VERSION : 0.1
    
    VAR_TEMP 
       i : DInt;
-      p2 : UInt;
+      p2 : Int;
       p2Bytes AT p2 : Array[0..1] of Byte;
-      p3 : UDInt;
+      p3 : DInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
       p4 : Dint;
       p4Bytes AT p4 : Array[0..3] of Byte;
@@ -271,7 +264,7 @@ BEGIN
 	    #Handle.BufferWritePointer := #i;
 	
 	ELSE
-	    "EvtFull"(Handle := #Handle);
+	    #Handle.BufferFull := TRUE;
 	END_IF;
 END_FUNCTION
 
@@ -279,8 +272,8 @@ FUNCTION "EvtCh16Tick32Real32" : Void
 { S7_Optimized_Access := 'FALSE' }
 VERSION : 0.1
    VAR_INPUT 
-      Channel : UInt;
-      Tick : UDInt;
+      Channel : Int;
+      Tick : DInt;
       Value : Real;
    END_VAR
 
@@ -290,9 +283,9 @@ VERSION : 0.1
    
    VAR_TEMP 
       i : DInt;
-      p2 : UInt;
+      p2 : Int;
       p2Bytes AT p2 : Array[0..1] of Byte;
-      p3 : UDInt;
+      p3 : DInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
       p4 : Real;
       p4Bytes AT p4 : Array[0..3] of Byte;
@@ -353,7 +346,7 @@ BEGIN
 	    #Handle.BufferWritePointer := #i;
 	
 	ELSE
-	    "EvtFull"(Handle := #Handle);
+	    #Handle.BufferFull := TRUE;
 	END_IF;
 END_FUNCTION
 
@@ -363,8 +356,8 @@ VERSION : 0.1
    VAR_INPUT 
       Group : Byte;
       Id : Byte;
-      Channel : UInt;
-      Tick : UDInt;
+      Channel : Int;
+      Tick : DInt;
       Value : Bool;
    END_VAR
 
@@ -374,9 +367,9 @@ VERSION : 0.1
    
    VAR_TEMP 
       i : DInt;
-      p2 : UInt;
+      p2 : Int;
       p2Bytes AT p2 : Array[0..1] of Byte;
-      p3 : UDInt;
+      p3 : DInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
    END_VAR
 
@@ -430,7 +423,7 @@ BEGIN
 	    #Handle.BufferWritePointer := #i;
 	
 	ELSE
-	    "EvtFull"(Handle := #Handle);
+	    #Handle.BufferFull := TRUE;
 	END_IF;
 END_FUNCTION
 
@@ -440,8 +433,8 @@ VERSION : 0.1
    VAR_INPUT 
       Group : Byte;
       Id : Byte;
-      Channel : UInt;
-      Tick : UDInt;
+      Channel : Int;
+      Tick : DInt;
       Value : Dint;
    END_VAR
 
@@ -451,9 +444,9 @@ VERSION : 0.1
    
    VAR_TEMP 
       i : DInt;
-      p2 : UInt;
+      p2 : Int;
       p2Bytes AT p2 : Array[0..1] of Byte;
-      p3 : UDInt;
+      p3 : DInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
       p4 : Dint;
       p4Bytes AT p4 : Array[0..3] of Byte;
@@ -520,7 +513,7 @@ BEGIN
 	    #Handle.BufferWritePointer := #i;
 	
 	ELSE
-	    "EvtFull"(Handle := #Handle);
+	    #Handle.BufferFull := TRUE;
 	END_IF;
 END_FUNCTION
 
@@ -530,8 +523,8 @@ VERSION : 0.1
    VAR_INPUT 
       Group : Byte;
       Id : Byte;
-      Channel : UInt;
-      Tick : UDInt;
+      Channel : Int;
+      Tick : DInt;
       Value : Real;
    END_VAR
 
@@ -541,9 +534,9 @@ VERSION : 0.1
    
    VAR_TEMP 
       i : DInt;
-      p2 : UInt;
+      p2 : Int;
       p2Bytes AT p2 : Array[0..1] of Byte;
-      p3 : UDInt;
+      p3 : DInt;
       p3Bytes AT p3 : Array[0..3] of Byte;
       p4 : Real;
       p4Bytes AT p4 : Array[0..3] of Byte;
@@ -610,7 +603,7 @@ BEGIN
 	    #Handle.BufferWritePointer := #i;
 	
 	ELSE
-	    "EvtFull"(Handle := #Handle);
+	    #Handle.BufferFull := TRUE;
 	END_IF;
 END_FUNCTION
 

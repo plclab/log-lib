@@ -14,9 +14,22 @@ import nl.rp.loglib.impl.TemplateFactory;
 
 public class SclTemplateFactory extends TemplateFactory {
 
+	public static final int BUFFER_FULL_HANDLING_CALL_EVENT = 0;
+	public static final int BUFFER_FULL_HANDLING_SET_BOOL = 1;
+	
+	private int bufferFullHandling = BUFFER_FULL_HANDLING_CALL_EVENT;
+	
 
 	public SclTemplateFactory() {
 
+	}
+	
+	public int getBufferFullHandling() {
+		return bufferFullHandling;
+	}
+	
+	public void setBufferFullHandling(int bufferFullHandling) {
+		this.bufferFullHandling = bufferFullHandling;
 	}
 
 	@Override
@@ -55,6 +68,10 @@ public class SclTemplateFactory extends TemplateFactory {
 		vars.add(new Variable("BufferOverflow", "DInt", "-1"));
 		vars.add(new Variable("MagicByte", "Byte", "" + Constant.MAGIC_BYTE_V1_LITTLE_ENDIAN.getValue()));
 
+		if (bufferFullHandling == BUFFER_FULL_HANDLING_SET_BOOL) {
+			vars.add(new Variable("BufferFull", "Bool", "FALSE"));
+		}
+		
 		final TemplateData templateData = new TemplateData();
 		templateData.setOutputFileName(name);
 		templateData.addNode("name", name);
@@ -87,6 +104,32 @@ public class SclTemplateFactory extends TemplateFactory {
 		instructions.add(TAB + "#Handle.MagicByte := " + Constant.MAGIC_BYTE_V1_BIG_ENDIAN.getValue() + ";");
 		instructions.add("END_IF;");
 
+		if (bufferFullHandling == BUFFER_FULL_HANDLING_SET_BOOL) {
+			
+			tempVars.add(new Variable("i", "DInt"));
+			
+			instructions.add("");
+			instructions.add("IF #Handle.BufferFull THEN");
+			instructions.add("");
+			//TODO: TAB's
+			instructions.add("#i := \"GetNextWritePointer\"(Length := 4, WritePointer := #Handle.BufferWritePointer, ReadPointer := #Handle.BufferReadPointer, BufferSize := #Handle.BufferSize, Overflow := #Handle.BufferOverflow);");
+			instructions.add("IF #i >= 0 THEN");
+			instructions.add("");
+			instructions.add(TAB + "#Handle.Buffer[#i] := " + Constant.START_FLAG.getValue() + ";");
+			instructions.add("");
+			addEvtNextIndexInstruction(instructions, "#Handle.MagicByte");
+			addEvtNextIndexInstruction(instructions, "" + Constant.EVT_FULL.getValue());
+			addEvtNextIndexInstruction(instructions, "" + Constant.END_FLAG.getValue());
+			instructions.add(TAB + "#Handle.BufferWritePointer := #i;");
+			instructions.add("");
+			instructions.add(TAB + "#Handle.BufferFull := FALSE;");
+			instructions.add("");
+			instructions.add("END_IF;");
+			instructions.add("");
+			instructions.add("END_IF;");
+			
+		}
+		
 		return createFunction("CreateBufferHandle", inputVars, inOutVars, tempVars, instructions);
 
 	}
@@ -95,40 +138,29 @@ public class SclTemplateFactory extends TemplateFactory {
 
 		final List<Variable> inputVars = new ArrayList<>();	
 		inputVars.add(new Variable("Length", "DInt"));
+		inputVars.add(new Variable("WritePointer", "DInt"));
+		inputVars.add(new Variable("ReadPointer", "DInt"));
+		inputVars.add(new Variable("BufferSize", "DInt"));
 
 		final List<Variable> inOutVars = new ArrayList<>();	
-		inOutVars.add(new Variable("Handle", "\"LogBuffer\""));
-
-		final List<Variable> tempVars = new ArrayList<>();
-		tempVars.add(new Variable("i", "DInt"));
+		inOutVars.add(new Variable("Overflow", "DInt"));
 
 		final List<String> instructions = new ArrayList<>();
-		instructions.add("#i := -1;");
-		instructions.add("IF #Handle.BufferWritePointer >= #Handle.BufferReadPointer THEN");
-		instructions.add(TAB + "IF #Handle.BufferWritePointer + #Length >= #Handle.BufferEnd THEN");
-		instructions.add(TABTAB + "IF #Handle.BufferReadPointer >= #Length THEN");
-		instructions.add(TABTABTAB + "#Handle.BufferOverflow := #Handle.BufferWritePointer;");
-		instructions.add(TABTABTAB + "#Handle.Buffer[0] := " + Constant.START_FLAG.getValue() + ";");
-		instructions.add(TABTABTAB + "#Handle.Buffer[1] := #Handle.MagicByte;");
-		instructions.add(TABTABTAB + "#i := 2;");
+		instructions.add("#GetNextWritePointer := -1;");
+		instructions.add("IF #WritePointer >= #ReadPointer THEN");
+		instructions.add(TAB + "IF #WritePointer + #Length >= #BufferSize THEN");
+		instructions.add(TABTAB + "IF #ReadPointer >= #Length THEN");
+		instructions.add(TABTABTAB + "#Overflow := #WritePointer;");
+		instructions.add(TABTABTAB + "#GetNextWritePointer := 0;");
 		instructions.add(TABTAB + "END_IF;");
 		instructions.add(TAB + "ELSE");
-		instructions.add(TABTAB + "#i := #Handle.BufferWritePointer + 1;");
-		instructions.add(TABTAB + "#Handle.Buffer[#i] := " + Constant.START_FLAG.getValue() + ";");
-		instructions.add(TABTAB + "#i := #i + 1;");
-		instructions.add(TABTAB + "#Handle.Buffer[#i] := #Handle.MagicByte;");
-		instructions.add(TABTAB + "#i := #i + 1;");
+		instructions.add(TABTAB + "#GetNextWritePointer := #WritePointer + 1;");
 		instructions.add(TAB + "END_IF;");
-		instructions.add("ELSIF #Handle.BufferReadPointer - #Handle.BufferWritePointer > #Length THEN");
-		instructions.add(TAB + "#i := #Handle.BufferWritePointer + 1;");
-		instructions.add(TAB + "#Handle.Buffer[#i] := " + Constant.START_FLAG.getValue() + ";");
-		instructions.add(TAB + "#i := #i + 1;");
-		instructions.add(TAB + "#Handle.Buffer[#i] := #Handle.MagicByte;");
-		instructions.add(TAB + "#i := #i + 1;");
+		instructions.add("ELSIF #ReadPointer - #WritePointer > #Length THEN");
+		instructions.add(TAB + "#GetNextWritePointer := #WritePointer + 1;");
 		instructions.add("END_IF;");
-		instructions.add("#GetNextWritePointer := #i;");
 
-		return createFunction("GetNextWritePointer", DataType.INT32, inputVars, inOutVars, tempVars, instructions);
+		return createFunction("GetNextWritePointer", DataType.INT32, inputVars, inOutVars, null, instructions);
 
 	}
 
@@ -143,8 +175,10 @@ public class SclTemplateFactory extends TemplateFactory {
 
 		final List<String> evtInstructions = new ArrayList<String>();	
 
-		evtInstructions.add(TAB + "#Handle.Buffer[#i] := " +  evtConstant.getValue() + ";");
+		evtInstructions.add(TAB + "#Handle.Buffer[#i] := " + Constant.START_FLAG.getValue() + ";");
 		evtInstructions.add("");
+		addEvtNextIndexInstruction(evtInstructions, "#Handle.MagicByte");
+		addEvtNextIndexInstruction(evtInstructions, "" + evtConstant.getValue());
 		
 		boolean createP2Var = false;
 		DataType p3DataType = null;
@@ -164,6 +198,14 @@ public class SclTemplateFactory extends TemplateFactory {
 
 			case NULL:
 				functionName += key.shortName;
+				break;
+
+			case FULL:
+				if (bufferFullHandling == BUFFER_FULL_HANDLING_SET_BOOL) {
+					return null;
+				} else {
+					functionName += key.shortName;
+				}
 				break;
 
 			case GR8:
@@ -295,7 +337,7 @@ public class SclTemplateFactory extends TemplateFactory {
 				return null; //TODO
 
 			default:
-				break;
+				return null;
 			}
 
 		}
@@ -317,20 +359,20 @@ public class SclTemplateFactory extends TemplateFactory {
 				new Variable("Handle", "\"LogBuffer\"")
 		});
 
-		final List<Variable> vars = new ArrayList<>();
-		interfaceNode.put("tempVars", vars);
-		vars.add(new Variable("i", "DInt"));
+		final List<Variable> tempVars = new ArrayList<>();
+		interfaceNode.put("tempVars", tempVars);
+		tempVars.add(new Variable("i", "DInt"));
 		if (createP2Var) {
-			vars.add(new Variable("p2", "UInt"));
-			vars.add(new Variable("p2Bytes AT p2", "Array[0..1] of Byte"));
+			tempVars.add(new Variable("p2", getDataType(DataType.UINT16)));
+			tempVars.add(new Variable("p2Bytes AT p2", "Array[0..1] of Byte"));
 		}
 		if (p3DataType != null) {
-			vars.add(new Variable("p3", getDataType(p3DataType)));
-			vars.add(new Variable("p3Bytes AT p3", "Array[0.." + (p3DataType.getLength() - 1) + "] of Byte"));
+			tempVars.add(new Variable("p3", getDataType(p3DataType)));
+			tempVars.add(new Variable("p3Bytes AT p3", "Array[0.." + (p3DataType.getLength() - 1) + "] of Byte"));
 		}
 		if (p4DataType != null) {
-			vars.add(new Variable("p4", getDataType(p4DataType)));
-			vars.add(new Variable("p4Bytes AT p4", "Array[0.." + (p4DataType.getLength() - 1) + "] of Byte"));
+			tempVars.add(new Variable("p4", getDataType(p4DataType)));
+			tempVars.add(new Variable("p4Bytes AT p4", "Array[0.." + (p4DataType.getLength() - 1) + "] of Byte"));
 		}
 
 		final Map<String, Object> bodyNode = new HashMap<>();
@@ -338,13 +380,30 @@ public class SclTemplateFactory extends TemplateFactory {
 
 		final List<String> instructions = new ArrayList<>();
 		bodyNode.put("instructions", instructions);
-		instructions.add("#i := \"GetNextWritePointer\"(Length := " + length + ", Handle := #Handle);");
-		instructions.add("IF #i >= 0 THEN");
-		instructions.add("");
-		instructions.addAll(evtInstructions);
-		instructions.add(TAB + "#Handle.BufferWritePointer := #i;");
-		instructions.add("");
-		instructions.add("END_IF;");
+		if (evtConstant == Constant.EVT_FULL) {
+			instructions.add("#i := \"GetNextWritePointer\"(Length := " + length + ", WritePointer := #Handle.BufferWritePointer, ReadPointer := #Handle.BufferReadPointer, BufferSize := #Handle.BufferSize, Overflow := #Handle.BufferOverflow);");
+			instructions.add("IF #i >= 0 THEN");
+			instructions.add("");
+			instructions.addAll(evtInstructions);
+			instructions.add(TAB + "#Handle.BufferWritePointer := #i;");
+			instructions.add("");
+			instructions.add("END_IF;");
+
+		} else {
+			instructions.add("#i := \"GetNextWritePointer\"(Length := " + (length + 4) + ", WritePointer := #Handle.BufferWritePointer, ReadPointer := #Handle.BufferReadPointer, BufferSize := #Handle.BufferSize, Overflow := #Handle.BufferOverflow);");
+			instructions.add("IF #i >= 0 THEN");
+			instructions.add("");
+			instructions.addAll(evtInstructions);
+			instructions.add(TAB + "#Handle.BufferWritePointer := #i;");
+			instructions.add("");
+			instructions.add("ELSE");
+			if (bufferFullHandling == BUFFER_FULL_HANDLING_SET_BOOL) {
+				instructions.add(TAB + "#Handle.BufferFull := TRUE;");
+			} else {
+				instructions.add(TAB + "\"EvtFull\"(Handle := #Handle);");
+			}
+			instructions.add("END_IF;");
+		}
 
 		return templateData;
 
