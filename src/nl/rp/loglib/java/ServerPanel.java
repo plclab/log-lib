@@ -199,7 +199,7 @@ public class ServerPanel extends JPanel {
 		private final JCheckBox channelCheckBox;
 		private final JSpinner channelSpinner;
 		private final JCheckBox tickCheckBox;
-		private final JComboBox<DataType> tickDataTypeComboBox;
+		private final JComboBox<Key> tickTypeComboBox;
 		private final JSpinner tickSpinner;
 		private final JCheckBox autoUpdateTickCheckBox;
 		private final JCheckBox valueCheckBox;
@@ -309,20 +309,18 @@ public class ServerPanel extends JPanel {
 
 				@Override
 				public void itemStateChanged(ItemEvent e) {
-					tickDataTypeComboBox.setEnabled(tickCheckBox.isSelected());
+					tickTypeComboBox.setEnabled(tickCheckBox.isSelected());
 					tickSpinner.setEnabled(tickCheckBox.isSelected());
 					autoUpdateTickCheckBox.setEnabled(tickCheckBox.isSelected());
 					updateSelectedEvent();
 				}
 			});
 
-			tickDataTypeComboBox = new JComboBox<>();
-			add(tickDataTypeComboBox, new GridBagConstraints(7, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-			tickDataTypeComboBox.addItem(DataType.INT32);  //TODO? (Protocol doesn't know if it's signed/unsigned)
-			tickDataTypeComboBox.addItem(DataType.UINT32); //TODO? (Protocol doesn't know if it's signed/unsigned)
-			tickDataTypeComboBox.addItem(DataType.INT64);  //TODO? (Protocol doesn't know if it's signed/unsigned)
-			tickDataTypeComboBox.addItem(DataType.UINT64); //TODO? (Protocol doesn't know if it's signed/unsigned)
-			tickDataTypeComboBox.addActionListener(new ActionListener() {
+			tickTypeComboBox = new JComboBox<>();
+			add(tickTypeComboBox, new GridBagConstraints(7, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+			tickTypeComboBox.addItem(Key.TICK32);
+			tickTypeComboBox.addItem(Key.TICK64); //TODO? (Protocol doesn't know if it's signed/unsigned)
+			tickTypeComboBox.addActionListener(new ActionListener() {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
@@ -536,12 +534,15 @@ public class ServerPanel extends JPanel {
 					break;
 
 				case UINT64:
-					integerValuesSpinner.setValue(0); //TODO
+					integerValuesSpinner.setValue(random.nextLong()); //TODO
 					break;
 
 				case REAL32:
+					floatValuesSpinner.setValue((Short.MIN_VALUE + (2 * random.nextInt((int)Math.pow(2, 15)))) + random.nextDouble());
+					break;
+
 				case REAL64:
-					floatValuesSpinner.setValue((random.nextDouble() * random.nextInt(Integer.MAX_VALUE)) + random.nextDouble()); //TODO: Handle DataType bounds
+					floatValuesSpinner.setValue((Integer.MIN_VALUE + (2 * random.nextInt((int)Math.pow(2, 31)))) + random.nextDouble());
 					break;
 
 				case STRING:
@@ -672,10 +673,10 @@ public class ServerPanel extends JPanel {
 		}
 
 		private DataType getSelectedTickDataType() {
-			if (tickDataTypeComboBox.isEnabled()) {
-				final Object selectedTickDataType = tickDataTypeComboBox.getSelectedItem();
-				if (selectedTickDataType != null && selectedTickDataType instanceof DataType) {
-					return (DataType)selectedTickDataType;
+			if (tickTypeComboBox.isEnabled()) {
+				final Object selectedTickType = tickTypeComboBox.getSelectedItem();
+				if (selectedTickType != null && selectedTickType instanceof Key) {
+					return ((Key)selectedTickType).dataType;
 				}
 			}
 			return null;

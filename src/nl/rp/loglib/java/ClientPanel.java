@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -42,6 +43,11 @@ public class ClientPanel extends JPanel {
 	public static final int COL_CHANNEL = 4;
 	public static final int COL_TICK = 5;
 	public static final int COL_VALUE = 6;
+
+	public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.###");
+	static {
+		DECIMAL_FORMAT.setGroupingUsed(false);
+	}
 
 	private final List<Packet> packets = new ArrayList<>();
 
@@ -355,7 +361,19 @@ public class ClientPanel extends JPanel {
 					break;
 
 				case COL_VALUE:
-					setText(packet.getValue() == null? "":"" + packet.getValue());
+					if (packet.getValue() != null) {
+
+						if (packet.getValue() instanceof Float) {
+							setText(DECIMAL_FORMAT.format((Float)packet.getValue()));
+						} else if (packet.getValue() instanceof Double) {
+							setText(DECIMAL_FORMAT.format((Double)packet.getValue()));
+						} else {
+							setText(packet.getValue().toString());
+						}
+
+					} else {
+						setText("");
+					}
 					break;
 
 				default: 

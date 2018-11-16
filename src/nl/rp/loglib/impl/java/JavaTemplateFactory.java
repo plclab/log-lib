@@ -343,7 +343,14 @@ public class JavaTemplateFactory extends TemplateFactory {
 				break;
 
 			case REAL32:
-				return null; //TODO
+				methodName += key.shortName;
+				args.add(new Variable(fullName, getDataType(key.dataType)));
+				evtInstructions.add(TAB + "final int rawIntBits = Float.floatToRawIntBits(" + fullName + ");");
+				addEvtInstruction(evtInstructions, "rawIntBits", false, 0);
+				addEvtInstruction(evtInstructions, "rawIntBits", false, 1);
+				addEvtInstruction(evtInstructions, "rawIntBits", false, 2);
+				addEvtInstruction(evtInstructions, "rawIntBits", false, 3);
+				break;
 
 			case INT64:
 			case UINT64:
@@ -353,7 +360,18 @@ public class JavaTemplateFactory extends TemplateFactory {
 				return null; //TODO
 
 			case REAL64:
-				return null; //TODO
+				methodName += key.shortName;
+				args.add(new Variable(fullName, getDataType(key.dataType)));
+				evtInstructions.add(TAB + "final long rawLongBits = Double.doubleToRawLongBits(" + fullName + ");");
+				addEvtInstruction(evtInstructions, "rawLongBits", false, 0);
+				addEvtInstruction(evtInstructions, "rawLongBits", false, 1);
+				addEvtInstruction(evtInstructions, "rawLongBits", false, 2);
+				addEvtInstruction(evtInstructions, "rawLongBits", false, 3);
+				addEvtInstruction(evtInstructions, "rawLongBits", false, 4);
+				addEvtInstruction(evtInstructions, "rawLongBits", false, 5);
+				addEvtInstruction(evtInstructions, "rawLongBits", false, 6);
+				addEvtInstruction(evtInstructions, "rawLongBits", false, 7);
+				break;
 
 			case STRING:
 			case BYTES:

@@ -421,6 +421,50 @@ public class LogBuffer {
         }
     }
 
+    protected void evtCh8Tick32Real32(byte channel, int tick, float value) {
+        if (getNextWritePointer(17)) {
+            buffer[i] = EVT_CH8_TICK32_REAL32;
+            buffer[++i] = channel;
+            buffer[++i] = (byte)(tick & 0xff);
+            buffer[++i] = (byte)((tick >> 8) & 0xff);
+            buffer[++i] = (byte)((tick >> 16) & 0xff);
+            buffer[++i] = (byte)((tick >> 24) & 0xff);
+            final int rawIntBits = Float.floatToRawIntBits(value);
+            buffer[++i] = (byte)(rawIntBits & 0xff);
+            buffer[++i] = (byte)((rawIntBits >> 8) & 0xff);
+            buffer[++i] = (byte)((rawIntBits >> 16) & 0xff);
+            buffer[++i] = (byte)((rawIntBits >> 24) & 0xff);
+            buffer[++i] = END_FLAG;
+            bufferWritePointer = i;
+        } else {
+            evtFull();
+        }
+    }
+
+    protected void evtCh8Tick32Real64(byte channel, int tick, double value) {
+        if (getNextWritePointer(21)) {
+            buffer[i] = EVT_CH8_TICK32_REAL64;
+            buffer[++i] = channel;
+            buffer[++i] = (byte)(tick & 0xff);
+            buffer[++i] = (byte)((tick >> 8) & 0xff);
+            buffer[++i] = (byte)((tick >> 16) & 0xff);
+            buffer[++i] = (byte)((tick >> 24) & 0xff);
+            final long rawLongBits = Double.doubleToRawLongBits(value);
+            buffer[++i] = (byte)(rawLongBits & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 8) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 16) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 24) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 32) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 40) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 48) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 56) & 0xff);
+            buffer[++i] = END_FLAG;
+            bufferWritePointer = i;
+        } else {
+            evtFull();
+        }
+    }
+
     protected void evtCh16Tick32Bool8(short channel, int tick, boolean value) {
         if (getNextWritePointer(15)) {
             buffer[i] = EVT_CH16_TICK32_BOOL8;
@@ -489,6 +533,52 @@ public class LogBuffer {
             buffer[++i] = (byte)((value >> 8) & 0xff);
             buffer[++i] = (byte)((value >> 16) & 0xff);
             buffer[++i] = (byte)((value >> 24) & 0xff);
+            buffer[++i] = END_FLAG;
+            bufferWritePointer = i;
+        } else {
+            evtFull();
+        }
+    }
+
+    protected void evtCh16Tick32Real32(short channel, int tick, float value) {
+        if (getNextWritePointer(18)) {
+            buffer[i] = EVT_CH16_TICK32_REAL32;
+            buffer[++i] = (byte)(channel & 0xff);
+            buffer[++i] = (byte)((channel >> 8) & 0xff);
+            buffer[++i] = (byte)(tick & 0xff);
+            buffer[++i] = (byte)((tick >> 8) & 0xff);
+            buffer[++i] = (byte)((tick >> 16) & 0xff);
+            buffer[++i] = (byte)((tick >> 24) & 0xff);
+            final int rawIntBits = Float.floatToRawIntBits(value);
+            buffer[++i] = (byte)(rawIntBits & 0xff);
+            buffer[++i] = (byte)((rawIntBits >> 8) & 0xff);
+            buffer[++i] = (byte)((rawIntBits >> 16) & 0xff);
+            buffer[++i] = (byte)((rawIntBits >> 24) & 0xff);
+            buffer[++i] = END_FLAG;
+            bufferWritePointer = i;
+        } else {
+            evtFull();
+        }
+    }
+
+    protected void evtCh16Tick32Real64(short channel, int tick, double value) {
+        if (getNextWritePointer(22)) {
+            buffer[i] = EVT_CH16_TICK32_REAL64;
+            buffer[++i] = (byte)(channel & 0xff);
+            buffer[++i] = (byte)((channel >> 8) & 0xff);
+            buffer[++i] = (byte)(tick & 0xff);
+            buffer[++i] = (byte)((tick >> 8) & 0xff);
+            buffer[++i] = (byte)((tick >> 16) & 0xff);
+            buffer[++i] = (byte)((tick >> 24) & 0xff);
+            final long rawLongBits = Double.doubleToRawLongBits(value);
+            buffer[++i] = (byte)(rawLongBits & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 8) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 16) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 24) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 32) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 40) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 48) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 56) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
         } else {
@@ -575,6 +665,54 @@ public class LogBuffer {
         }
     }
 
+    protected void evtGr8Id8Ch8Tick32Real32(byte group, byte id, byte channel, int tick, float value) {
+        if (getNextWritePointer(19)) {
+            buffer[i] = EVT_GR8_ID8_CH8_TICK32_REAL32;
+            buffer[++i] = group;
+            buffer[++i] = id;
+            buffer[++i] = channel;
+            buffer[++i] = (byte)(tick & 0xff);
+            buffer[++i] = (byte)((tick >> 8) & 0xff);
+            buffer[++i] = (byte)((tick >> 16) & 0xff);
+            buffer[++i] = (byte)((tick >> 24) & 0xff);
+            final int rawIntBits = Float.floatToRawIntBits(value);
+            buffer[++i] = (byte)(rawIntBits & 0xff);
+            buffer[++i] = (byte)((rawIntBits >> 8) & 0xff);
+            buffer[++i] = (byte)((rawIntBits >> 16) & 0xff);
+            buffer[++i] = (byte)((rawIntBits >> 24) & 0xff);
+            buffer[++i] = END_FLAG;
+            bufferWritePointer = i;
+        } else {
+            evtFull();
+        }
+    }
+
+    protected void evtGr8Id8Ch8Tick32Real64(byte group, byte id, byte channel, int tick, double value) {
+        if (getNextWritePointer(23)) {
+            buffer[i] = EVT_GR8_ID8_CH8_TICK32_REAL64;
+            buffer[++i] = group;
+            buffer[++i] = id;
+            buffer[++i] = channel;
+            buffer[++i] = (byte)(tick & 0xff);
+            buffer[++i] = (byte)((tick >> 8) & 0xff);
+            buffer[++i] = (byte)((tick >> 16) & 0xff);
+            buffer[++i] = (byte)((tick >> 24) & 0xff);
+            final long rawLongBits = Double.doubleToRawLongBits(value);
+            buffer[++i] = (byte)(rawLongBits & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 8) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 16) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 24) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 32) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 40) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 48) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 56) & 0xff);
+            buffer[++i] = END_FLAG;
+            bufferWritePointer = i;
+        } else {
+            evtFull();
+        }
+    }
+
     protected void evtGr8Id8Ch16Tick32Bool8(byte group, byte id, short channel, int tick, boolean value) {
         if (getNextWritePointer(17)) {
             buffer[i] = EVT_GR8_ID8_CH16_TICK32_BOOL8;
@@ -651,6 +789,56 @@ public class LogBuffer {
             buffer[++i] = (byte)((value >> 8) & 0xff);
             buffer[++i] = (byte)((value >> 16) & 0xff);
             buffer[++i] = (byte)((value >> 24) & 0xff);
+            buffer[++i] = END_FLAG;
+            bufferWritePointer = i;
+        } else {
+            evtFull();
+        }
+    }
+
+    protected void evtGr8Id8Ch16Tick32Real32(byte group, byte id, short channel, int tick, float value) {
+        if (getNextWritePointer(20)) {
+            buffer[i] = EVT_GR8_ID8_CH16_TICK32_REAL32;
+            buffer[++i] = group;
+            buffer[++i] = id;
+            buffer[++i] = (byte)(channel & 0xff);
+            buffer[++i] = (byte)((channel >> 8) & 0xff);
+            buffer[++i] = (byte)(tick & 0xff);
+            buffer[++i] = (byte)((tick >> 8) & 0xff);
+            buffer[++i] = (byte)((tick >> 16) & 0xff);
+            buffer[++i] = (byte)((tick >> 24) & 0xff);
+            final int rawIntBits = Float.floatToRawIntBits(value);
+            buffer[++i] = (byte)(rawIntBits & 0xff);
+            buffer[++i] = (byte)((rawIntBits >> 8) & 0xff);
+            buffer[++i] = (byte)((rawIntBits >> 16) & 0xff);
+            buffer[++i] = (byte)((rawIntBits >> 24) & 0xff);
+            buffer[++i] = END_FLAG;
+            bufferWritePointer = i;
+        } else {
+            evtFull();
+        }
+    }
+
+    protected void evtGr8Id8Ch16Tick32Real64(byte group, byte id, short channel, int tick, double value) {
+        if (getNextWritePointer(24)) {
+            buffer[i] = EVT_GR8_ID8_CH16_TICK32_REAL64;
+            buffer[++i] = group;
+            buffer[++i] = id;
+            buffer[++i] = (byte)(channel & 0xff);
+            buffer[++i] = (byte)((channel >> 8) & 0xff);
+            buffer[++i] = (byte)(tick & 0xff);
+            buffer[++i] = (byte)((tick >> 8) & 0xff);
+            buffer[++i] = (byte)((tick >> 16) & 0xff);
+            buffer[++i] = (byte)((tick >> 24) & 0xff);
+            final long rawLongBits = Double.doubleToRawLongBits(value);
+            buffer[++i] = (byte)(rawLongBits & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 8) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 16) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 24) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 32) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 40) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 48) & 0xff);
+            buffer[++i] = (byte)((rawLongBits >> 56) & 0xff);
             buffer[++i] = END_FLAG;
             bufferWritePointer = i;
         } else {
