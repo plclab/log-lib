@@ -1,0 +1,5525 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://www.plcopen.org/xml/tc6_0200">
+  <fileHeader companyName="" productName="CODESYS" productVersion="CODESYS V3.5 SP8 Patch 4" creationDateTime="2018-11-14T08:45:48.2560871" />
+  <contentHeader name="" modificationDateTime="2018-11-14T08:45:35.8305333">
+    <coordinateInfo>
+      <fbd>
+        <scaling x="1" y="1" />
+      </fbd>
+      <ld>
+        <scaling x="1" y="1" />
+      </ld>
+      <sfc>
+        <scaling x="1" y="1" />
+      </sfc>
+    </coordinateInfo>
+    <addData>
+      <data name="http://www.3s-software.com/plcopenxml/projectinformation" handleUnknown="implementation">
+        <ProjectInformation />
+      </data>
+    </addData>
+  </contentHeader>
+  <types>
+    <dataTypes>
+      <dataType name="LogBufferHandle">
+        <baseType>
+          <struct>
+            <variable name="BufferAddress">
+              <type>
+                <DWORD />
+              </type>
+            </variable>
+            <variable name="BufferSize">
+              <type>
+                <DINT />
+              </type>
+            </variable>
+            <variable name="BufferEndAddress">
+              <type>
+                <DWORD />
+              </type>
+            </variable>
+            <variable name="BufferWritePointer">
+              <type>
+                <DINT />
+              </type>
+            </variable>
+            <variable name="BufferReadPointer">
+              <type>
+                <DINT />
+              </type>
+            </variable>
+            <variable name="BufferOverflow">
+              <type>
+                <DINT />
+              </type>
+            </variable>
+            <variable name="MagicByte">
+              <type>
+                <BYTE />
+              </type>
+              <initialValue>
+                <simpleValue value="MAGIC_BYTE_V1_LITTLE_ENDIAN" />
+              </initialValue>
+            </variable>
+          </struct>
+        </baseType>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>60038d0d-d46b-42dd-87a9-4e37a42bcef5</ObjectId>
+          </data>
+        </addData>
+      </dataType>
+    </dataTypes>
+    <pous>
+      <pou name="CreateBufferHandle" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="BufferAddress">
+              <type>
+                <derived name="DWORD" />
+              </type>
+            </variable>
+            <variable name="BufferSize">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="byteOrderInt">
+              <type>
+                <derived name="INT" />
+              </type>
+            </variable>
+            <variable name="byteOrderArray">
+              <type>
+                <derived name="ARRAY[0..1] OF BYTE" />
+              </type>
+            </variable>
+            <variable name="pInt">
+              <type>
+                <derived name="POINTER TO INT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">
+Handle.BufferAddress := BufferAddress;
+Handle.BufferSize := BufferSize;
+Handle.BufferEndAddress := BufferAddress + DINT_TO_DWORD(BufferSize - 1);
+
+byteOrderInt := 1;
+pInt := ADR(byteOrderArray[0]);
+pInt^ := byteOrderInt;
+IF byteOrderArray[0] = 1 THEN
+    Handle.MagicByte := MAGIC_BYTE_V1_LITTLE_ENDIAN;
+ELSE
+    Handle.MagicByte := MAGIC_BYTE_V1_BIG_ENDIAN;
+END_IF
+
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION CreateBufferHandle : BOOL
+VAR_INPUT
+    BufferAddress: DWORD;
+    BufferSize: DINT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    byteOrderInt: INT;
+    byteOrderArray: ARRAY[0..1] OF BYTE;
+    pInt: POINTER TO INT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>c46c1293-e550-4cb9-aa8b-63a7324413ae</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="GetNextWritePointer" pouType="function">
+        <interface>
+          <returnType>
+            <DINT />
+          </returnType>
+          <inputVars>
+            <variable name="Length">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="WritePointer">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="ReadPointer">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="BufferSize">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="BufferOverflow">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+          </inOutVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">GetNextWritePointer := -1;
+IF WritePointer &gt;= ReadPointer THEN
+    IF WritePointer + Length + 1 &gt;= BufferSize THEN
+        IF ReadPointer &gt;= Length THEN
+            BufferOverflow := WritePointer;
+            GetNextWritePointer := 0;
+        END_IF
+    ELSE
+        GetNextWritePointer := WritePointer + 1;
+    END_IF
+ELSIF ReadPointer - WritePointer &gt; Length THEN
+    GetNextWritePointer := WritePointer + 1;
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION GetNextWritePointer : DINT
+VAR_INPUT
+    Length: DINT;
+    WritePointer: DINT;
+    ReadPointer: DINT;
+    BufferSize: DINT;
+END_VAR
+VAR_IN_OUT
+    BufferOverflow: DINT;
+END_VAR
+VAR
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>2a5eb56b-152a-4435-a006-d971138a18e0</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtNull" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(4, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_NULL;
+
+    p1 := p1 + 1;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtNull : BOOL
+VAR_INPUT
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>7ad6c907-5e79-4b01-9b66-5967c0973536</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtTick32" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(8, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_TICK32;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p1 := p1 + 5;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtTick32 : BOOL
+VAR_INPUT
+    Tick: UDINT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>4a5f0180-67e1-48c3-b868-eb02dce2a205</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtCh8Tick32Bool8" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Channel">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="BOOL" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(10, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_CH8_TICK32_BOOL8;
+
+    p1 := p1 + 1;
+    p1^ := Channel;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p1 := p1 + 5;
+    p1^ := BOOL_TO_BYTE(Value);
+
+    p1 := p1 + 1;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtCh8Tick32Bool8 : BOOL
+VAR_INPUT
+    Channel: BYTE;
+    Tick: UDINT;
+    Value: BOOL;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>ead853a7-6a9e-487a-96ef-ee591ca53136</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtCh8Tick32Int16" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Channel">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="INT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(11, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_CH8_TICK32_INT16;
+
+    p1 := p1 + 1;
+    p1^ := Channel;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p1 := p1 + 5;
+    p2 := ADR(Value);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtCh8Tick32Int16 : BOOL
+VAR_INPUT
+    Channel: BYTE;
+    Tick: UDINT;
+    Value: INT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>e779905b-2ad6-4331-9624-d18198859098</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtCh8Tick32Int32" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Channel">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO DINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(13, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_CH8_TICK32_INT32;
+
+    p1 := p1 + 1;
+    p1^ := Channel;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 9;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtCh8Tick32Int32 : BOOL
+VAR_INPUT
+    Channel: BYTE;
+    Tick: UDINT;
+    Value: DINT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO DINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>9864b1e0-377a-466c-a759-9a430429943f</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtCh8Tick32UInt32" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Channel">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(13, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_CH8_TICK32_UINT32;
+
+    p1 := p1 + 1;
+    p1^ := Channel;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 9;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtCh8Tick32UInt32 : BOOL
+VAR_INPUT
+    Channel: BYTE;
+    Tick: UDINT;
+    Value: UDINT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO UDINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>2daa6e7e-03db-4428-a646-2e2bf23bcdcb</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtCh8Tick32Real32" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Channel">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="REAL" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO REAL" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(13, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_CH8_TICK32_REAL32;
+
+    p1 := p1 + 1;
+    p1^ := Channel;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 9;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtCh8Tick32Real32 : BOOL
+VAR_INPUT
+    Channel: BYTE;
+    Tick: UDINT;
+    Value: REAL;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO REAL;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>4106ad30-1525-442e-a261-4af3082d9009</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtCh8Tick32Real64" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Channel">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="LREAL" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO LREAL" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(17, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_CH8_TICK32_REAL64;
+
+    p1 := p1 + 1;
+    p1^ := Channel;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 13;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtCh8Tick32Real64 : BOOL
+VAR_INPUT
+    Channel: BYTE;
+    Tick: UDINT;
+    Value: LREAL;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO LREAL;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>8d36a3dc-e63f-41aa-9d4c-22d0c0153c34</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtCh16Tick32Bool8" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Channel">
+              <type>
+                <derived name="UINT" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="BOOL" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(11, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_CH16_TICK32_BOOL8;
+
+    p1 := p1 + 1;
+    p2 := ADR(Channel);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p1 := p1 + 5;
+    p1^ := BOOL_TO_BYTE(Value);
+
+    p1 := p1 + 1;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtCh16Tick32Bool8 : BOOL
+VAR_INPUT
+    Channel: UINT;
+    Tick: UDINT;
+    Value: BOOL;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>568bda61-aa2c-4186-b672-37261dc86861</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtCh16Tick32Int16" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Channel">
+              <type>
+                <derived name="UINT" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="INT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(12, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_CH16_TICK32_INT16;
+
+    p1 := p1 + 1;
+    p2 := ADR(Channel);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p1 := p1 + 5;
+    p2 := ADR(Value);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtCh16Tick32Int16 : BOOL
+VAR_INPUT
+    Channel: UINT;
+    Tick: UDINT;
+    Value: INT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>7879d925-a66f-408a-95a1-ffb4198b1629</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtCh16Tick32Int32" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Channel">
+              <type>
+                <derived name="UINT" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO DINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(14, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_CH16_TICK32_INT32;
+
+    p1 := p1 + 1;
+    p2 := ADR(Channel);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 9;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtCh16Tick32Int32 : BOOL
+VAR_INPUT
+    Channel: UINT;
+    Tick: UDINT;
+    Value: DINT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO DINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>4a5a384a-8ed7-40c0-bc9a-9005c823dfb4</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtCh16Tick32UInt32" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Channel">
+              <type>
+                <derived name="UINT" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(14, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_CH16_TICK32_UINT32;
+
+    p1 := p1 + 1;
+    p2 := ADR(Channel);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 9;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtCh16Tick32UInt32 : BOOL
+VAR_INPUT
+    Channel: UINT;
+    Tick: UDINT;
+    Value: UDINT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO UDINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>5a1f6c7d-852d-43a3-af12-3a9dfc54b73a</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtCh16Tick32Real32" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Channel">
+              <type>
+                <derived name="UINT" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="REAL" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO REAL" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(14, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_CH16_TICK32_REAL32;
+
+    p1 := p1 + 1;
+    p2 := ADR(Channel);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 9;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtCh16Tick32Real32 : BOOL
+VAR_INPUT
+    Channel: UINT;
+    Tick: UDINT;
+    Value: REAL;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO REAL;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>e8ba672d-4d4d-4347-be6b-ba4cda253e66</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtCh16Tick32Real64" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Channel">
+              <type>
+                <derived name="UINT" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="LREAL" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO LREAL" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(18, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_CH16_TICK32_REAL64;
+
+    p1 := p1 + 1;
+    p2 := ADR(Channel);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 13;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtCh16Tick32Real64 : BOOL
+VAR_INPUT
+    Channel: UINT;
+    Tick: UDINT;
+    Value: LREAL;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO LREAL;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>2c2f4674-f43c-438f-8186-a87d750c3d98</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtGr8Id8Ch8Tick32Bool8" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Group">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Id">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Channel">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="BOOL" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(12, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_GR8_ID8_CH8_TICK32_BOOL8;
+
+    p1 := p1 + 1;
+    p1^ := Group;
+
+    p1 := p1 + 1;
+    p1^ := Id;
+
+    p1 := p1 + 1;
+    p1^ := Channel;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p1 := p1 + 5;
+    p1^ := BOOL_TO_BYTE(Value);
+
+    p1 := p1 + 1;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtGr8Id8Ch8Tick32Bool8 : BOOL
+VAR_INPUT
+    Group: BYTE;
+    Id: BYTE;
+    Channel: BYTE;
+    Tick: UDINT;
+    Value: BOOL;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>d33bbb1c-d4d6-4047-98f5-48136184c050</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtGr8Id8Ch8Tick32Int16" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Group">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Id">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Channel">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="INT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(13, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_GR8_ID8_CH8_TICK32_INT16;
+
+    p1 := p1 + 1;
+    p1^ := Group;
+
+    p1 := p1 + 1;
+    p1^ := Id;
+
+    p1 := p1 + 1;
+    p1^ := Channel;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p1 := p1 + 5;
+    p2 := ADR(Value);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtGr8Id8Ch8Tick32Int16 : BOOL
+VAR_INPUT
+    Group: BYTE;
+    Id: BYTE;
+    Channel: BYTE;
+    Tick: UDINT;
+    Value: INT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>42b97492-c592-4389-b5f6-a43cecd61280</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtGr8Id8Ch8Tick32Int32" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Group">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Id">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Channel">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO DINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(15, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_GR8_ID8_CH8_TICK32_INT32;
+
+    p1 := p1 + 1;
+    p1^ := Group;
+
+    p1 := p1 + 1;
+    p1^ := Id;
+
+    p1 := p1 + 1;
+    p1^ := Channel;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 9;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtGr8Id8Ch8Tick32Int32 : BOOL
+VAR_INPUT
+    Group: BYTE;
+    Id: BYTE;
+    Channel: BYTE;
+    Tick: UDINT;
+    Value: DINT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO DINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>8835469c-140e-400d-85e8-8f899fc90693</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtGr8Id8Ch8Tick32UInt32" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Group">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Id">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Channel">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(15, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_GR8_ID8_CH8_TICK32_UINT32;
+
+    p1 := p1 + 1;
+    p1^ := Group;
+
+    p1 := p1 + 1;
+    p1^ := Id;
+
+    p1 := p1 + 1;
+    p1^ := Channel;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 9;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtGr8Id8Ch8Tick32UInt32 : BOOL
+VAR_INPUT
+    Group: BYTE;
+    Id: BYTE;
+    Channel: BYTE;
+    Tick: UDINT;
+    Value: UDINT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO UDINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>560ad794-3c6e-47d3-9d30-8673c368cb3f</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtGr8Id8Ch8Tick32Real32" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Group">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Id">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Channel">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="REAL" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO REAL" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(15, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_GR8_ID8_CH8_TICK32_REAL32;
+
+    p1 := p1 + 1;
+    p1^ := Group;
+
+    p1 := p1 + 1;
+    p1^ := Id;
+
+    p1 := p1 + 1;
+    p1^ := Channel;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 9;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtGr8Id8Ch8Tick32Real32 : BOOL
+VAR_INPUT
+    Group: BYTE;
+    Id: BYTE;
+    Channel: BYTE;
+    Tick: UDINT;
+    Value: REAL;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO REAL;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>ef328249-9f51-4772-933b-7161f0d2e8e1</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtGr8Id8Ch8Tick32Real64" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Group">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Id">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Channel">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="LREAL" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO LREAL" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(19, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_GR8_ID8_CH8_TICK32_REAL64;
+
+    p1 := p1 + 1;
+    p1^ := Group;
+
+    p1 := p1 + 1;
+    p1^ := Id;
+
+    p1 := p1 + 1;
+    p1^ := Channel;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 13;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtGr8Id8Ch8Tick32Real64 : BOOL
+VAR_INPUT
+    Group: BYTE;
+    Id: BYTE;
+    Channel: BYTE;
+    Tick: UDINT;
+    Value: LREAL;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO LREAL;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>f5f1fef6-1744-44eb-af68-c78a1e2ca286</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtGr8Id8Ch16Tick32Bool8" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Group">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Id">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Channel">
+              <type>
+                <derived name="UINT" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="BOOL" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(13, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_GR8_ID8_CH16_TICK32_BOOL8;
+
+    p1 := p1 + 1;
+    p1^ := Group;
+
+    p1 := p1 + 1;
+    p1^ := Id;
+
+    p1 := p1 + 1;
+    p2 := ADR(Channel);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p1 := p1 + 5;
+    p1^ := BOOL_TO_BYTE(Value);
+
+    p1 := p1 + 1;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtGr8Id8Ch16Tick32Bool8 : BOOL
+VAR_INPUT
+    Group: BYTE;
+    Id: BYTE;
+    Channel: UINT;
+    Tick: UDINT;
+    Value: BOOL;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>a84e65bc-d6ed-4613-9982-03f00cbaab30</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtGr8Id8Ch16Tick32Int16" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Group">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Id">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Channel">
+              <type>
+                <derived name="UINT" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="INT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(14, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_GR8_ID8_CH16_TICK32_INT16;
+
+    p1 := p1 + 1;
+    p1^ := Group;
+
+    p1 := p1 + 1;
+    p1^ := Id;
+
+    p1 := p1 + 1;
+    p2 := ADR(Channel);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p1 := p1 + 5;
+    p2 := ADR(Value);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtGr8Id8Ch16Tick32Int16 : BOOL
+VAR_INPUT
+    Group: BYTE;
+    Id: BYTE;
+    Channel: UINT;
+    Tick: UDINT;
+    Value: INT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>3259d9a3-487c-4c9c-b748-326ce7729bea</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtGr8Id8Ch16Tick32Int32" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Group">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Id">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Channel">
+              <type>
+                <derived name="UINT" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO DINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(16, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_GR8_ID8_CH16_TICK32_INT32;
+
+    p1 := p1 + 1;
+    p1^ := Group;
+
+    p1 := p1 + 1;
+    p1^ := Id;
+
+    p1 := p1 + 1;
+    p2 := ADR(Channel);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 9;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtGr8Id8Ch16Tick32Int32 : BOOL
+VAR_INPUT
+    Group: BYTE;
+    Id: BYTE;
+    Channel: UINT;
+    Tick: UDINT;
+    Value: DINT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO DINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>307844f7-47fb-4048-a809-ad8a446677fe</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtGr8Id8Ch16Tick32UInt32" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Group">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Id">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Channel">
+              <type>
+                <derived name="UINT" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(16, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_GR8_ID8_CH16_TICK32_UINT32;
+
+    p1 := p1 + 1;
+    p1^ := Group;
+
+    p1 := p1 + 1;
+    p1^ := Id;
+
+    p1 := p1 + 1;
+    p2 := ADR(Channel);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 9;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtGr8Id8Ch16Tick32UInt32 : BOOL
+VAR_INPUT
+    Group: BYTE;
+    Id: BYTE;
+    Channel: UINT;
+    Tick: UDINT;
+    Value: UDINT;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO UDINT;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>4bb17630-2f8e-4549-9855-d479450c4bf1</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtGr8Id8Ch16Tick32Real32" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Group">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Id">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Channel">
+              <type>
+                <derived name="UINT" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="REAL" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO REAL" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(16, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_GR8_ID8_CH16_TICK32_REAL32;
+
+    p1 := p1 + 1;
+    p1^ := Group;
+
+    p1 := p1 + 1;
+    p1^ := Id;
+
+    p1 := p1 + 1;
+    p2 := ADR(Channel);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 9;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtGr8Id8Ch16Tick32Real32 : BOOL
+VAR_INPUT
+    Group: BYTE;
+    Id: BYTE;
+    Channel: UINT;
+    Tick: UDINT;
+    Value: REAL;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO REAL;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>37f0edc8-5767-4599-9f2c-5a65187e410a</ObjectId>
+          </data>
+        </addData>
+      </pou>
+      <pou name="EvtGr8Id8Ch16Tick32Real64" pouType="function">
+        <interface>
+          <returnType>
+            <BOOL />
+          </returnType>
+          <inputVars>
+            <variable name="Group">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Id">
+              <type>
+                <derived name="BYTE" />
+              </type>
+            </variable>
+            <variable name="Channel">
+              <type>
+                <derived name="UINT" />
+              </type>
+            </variable>
+            <variable name="Tick">
+              <type>
+                <derived name="UDINT" />
+              </type>
+            </variable>
+            <variable name="Value">
+              <type>
+                <derived name="LREAL" />
+              </type>
+            </variable>
+          </inputVars>
+          <inOutVars>
+            <variable name="Handle">
+              <type>
+                <derived name="LogBufferHandle" />
+              </type>
+            </variable>
+          </inOutVars>
+          <localVars>
+            <variable name="i">
+              <type>
+                <derived name="DINT" />
+              </type>
+            </variable>
+            <variable name="p1">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p2">
+              <type>
+                <derived name="POINTER TO BYTE" />
+              </type>
+            </variable>
+            <variable name="p3">
+              <type>
+                <derived name="POINTER TO UDINT" />
+              </type>
+            </variable>
+            <variable name="p4">
+              <type>
+                <derived name="POINTER TO LREAL" />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">i := GetNextWritePointer(20, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+IF i &gt;= 0 THEN
+
+    p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
+
+    p1^ := START_FLAG;
+
+    p1 := p1 + 1;
+    p1^ := Handle.MagicByte;
+
+    p1 := p1 + 1;
+    p1^ := EVT_GR8_ID8_CH16_TICK32_REAL64;
+
+    p1 := p1 + 1;
+    p1^ := Group;
+
+    p1 := p1 + 1;
+    p1^ := Id;
+
+    p1 := p1 + 1;
+    p2 := ADR(Channel);
+    p1^ := p2^;
+
+    p1 := p1 + 1;
+    p2 := p2 + 1;
+    p1^ := p2^;
+
+    p3 := p1 + 1;
+    p3^ := Tick;
+
+    p4 := p1 + 5;
+    p4^ := Value;
+
+    p1 := p1 + 13;
+    p1^ := END_FLAG;
+
+    Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
+
+END_IF
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/interfaceasplaintext" handleUnknown="implementation">
+            <InterfaceAsPlainText>
+              <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION EvtGr8Id8Ch16Tick32Real64 : BOOL
+VAR_INPUT
+    Group: BYTE;
+    Id: BYTE;
+    Channel: UINT;
+    Tick: UDINT;
+    Value: LREAL;
+END_VAR
+VAR_IN_OUT
+    Handle: LogBufferHandle;
+END_VAR
+VAR
+    i: DINT;
+    p1: POINTER TO BYTE;
+    p2: POINTER TO BYTE;
+    p3: POINTER TO UDINT;
+    p4: POINTER TO LREAL;
+END_VAR
+</xhtml>
+            </InterfaceAsPlainText>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>29d17a1d-d663-409d-b0d0-fa7e7f9af6e0</ObjectId>
+          </data>
+        </addData>
+      </pou>
+    </pous>
+  </types>
+  <instances>
+    <configurations />
+  </instances>
+  <addData>
+    <data name="http://www.3s-software.com/plcopenxml/globalvars" handleUnknown="implementation">
+      <globalVars name="LogLibCore" constant="true">
+        <variable name="START_FLAG">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="255" />
+          </initialValue>
+        </variable>
+        <variable name="MAGIC_BYTE_V1_LITTLE_ENDIAN">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="112" />
+          </initialValue>
+        </variable>
+        <variable name="MAGIC_BYTE_V1_BIG_ENDIAN">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="113" />
+          </initialValue>
+        </variable>
+        <variable name="END_FLAG">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="254" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_NULL">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="0" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_FULL">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="1" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="8" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="9" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="10" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="11" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="12" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="13" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="14" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="15" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="16" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="17" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="18" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_TICK32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="19" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="20" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="21" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="22" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="23" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="24" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="25" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="26" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="27" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="28" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="29" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="30" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="31" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="32" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="33" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="34" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="35" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="36" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="37" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="38" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="39" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="40" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="41" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="42" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="43" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="44" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="45" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="46" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="47" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="48" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="49" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="50" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK32_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="51" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK32_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="52" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK32_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="53" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="54" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="55" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="56" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="57" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="58" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="59" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="60" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="61" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="62" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="63" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="64" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK32_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="65" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK32_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="66" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK32_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="67" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK32_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="68" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK32_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="69" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK32_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="70" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK32_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="71" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK32_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="72" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_TICK64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="73" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="74" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="75" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="76" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="77" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="78" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK32_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="79" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK32_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="80" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK32_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="81" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK32_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="82" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK32_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="83" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK32_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="84" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK32_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="85" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK32_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="86" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK32_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="87" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK32_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="88" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="89" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="90" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="91" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="92" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK32_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="93" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK32_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="94" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK32_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="95" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK32_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="96" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK32_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="97" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK32_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="98" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK32_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="99" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_TICK32_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="100" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_TICK32_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="101" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_TICK32_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="102" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID16_CH16_TICK32_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="103" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID16_CH16_TICK32_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="104" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID16_CH16_TICK32_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="105" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="106" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="107" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="108" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="109" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="110" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK32_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="111" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK32_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="112" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK32_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="113" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK32_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="114" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK32_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="115" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK32_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="116" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK64_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="117" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK64_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="118" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK64_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="119" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_TICK32_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="120" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_TICK32_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="121" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK32_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="122" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK32_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="123" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK32_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="124" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID16_CH16_TICK32_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="125" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID16_CH16_TICK32_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="126" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="127" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="128" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK32_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="129" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK32_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="130" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK32_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="131" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK32_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="132" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK32_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="133" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK32_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="134" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK32_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="135" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK32_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="136" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK64_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="137" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK64_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="138" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK64_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="139" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK64_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="140" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK64_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="141" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK32_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="142" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK32_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="143" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK32_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="144" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="145" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK64_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="146" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK64_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="147" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK64_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="148" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK64_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="149" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK64_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="150" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK64_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="151" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK64_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="152" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK64_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="153" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_TICK32_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="154" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_TICK32_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="155" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_TICK32_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="156" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID16_CH16_TICK32_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="157" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID16_CH16_TICK32_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="158" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID16_CH16_TICK32_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="159" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK32_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="160" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK32_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="161" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="162" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK32_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="163" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK32_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="164" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK32_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="165" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK32_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="166" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK64_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="167" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK64_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="168" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK64_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="169" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK64_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="170" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK64_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="171" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK64_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="172" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK64_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="173" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK32_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="174" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK32_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="175" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK32_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="176" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="177" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK32_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="178" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK64_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="179" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK64_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="180" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK64_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="181" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK64_BOOL8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="182" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK64_INT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="183" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK64_UINT8">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="184" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK32_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="185" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK64_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="186" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK64_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="187" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK64_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="188" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK32_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="189" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK32_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="190" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK64_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="191" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK64_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="192" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK64_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="193" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK64_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="194" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK64_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="195" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK64_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="196" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK64_INT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="197" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK64_UINT16">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="198" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_TICK32_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="199" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID16_CH16_TICK32_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="200" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID16_CH16_TICK64_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="201" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID16_CH16_TICK64_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="202" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID16_CH16_TICK64_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="203" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK32_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="204" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK64_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="205" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK64_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="206" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK64_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="207" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK64_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="208" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH8_TICK64_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="209" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK32_INT64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="210" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK32_UINT64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="211" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK32_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="212" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK64_INT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="213" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK64_UINT32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="214" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK64_REAL32">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="215" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK64_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="216" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK64_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="217" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK64_INT64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="218" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK64_UINT64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="219" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID8_CH16_TICK64_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="220" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_ID16_CH16_TICK64_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="221" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID16_CH16_TICK64_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="222" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK64_INT64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="223" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK64_UINT64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="224" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK64_REAL64">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="225" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_STRING">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="226" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_BYTES">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="227" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_STRING">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="228" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_BYTES">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="229" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_STRING">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="230" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_BYTES">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="231" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_STRING">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="232" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_BYTES">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="233" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK32_STRING">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="234" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK32_BYTES">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="235" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK32_STRING">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="236" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK32_BYTES">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="237" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK32_STRING">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="238" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK32_BYTES">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="239" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_TICK32_STRING">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="240" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_TICK32_BYTES">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="241" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK32_STRING">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="242" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK32_BYTES">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="243" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK64_STRING">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="244" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH8_TICK64_BYTES">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="245" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK64_STRING">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="246" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_CH16_TICK64_BYTES">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="247" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK64_STRING">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="248" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH8_TICK64_BYTES">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="249" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_TICK64_STRING">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="250" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR8_ID8_CH16_TICK64_BYTES">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="251" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK64_STRING">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="252" />
+          </initialValue>
+        </variable>
+        <variable name="EVT_GR16_ID16_CH16_TICK64_BYTES">
+          <type>
+            <derived name="BYTE" />
+          </type>
+          <initialValue>
+            <simpleValue value="253" />
+          </initialValue>
+        </variable>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
+            <ObjectId>2a4dc63b-39c5-4266-8186-c395351ddc3f</ObjectId>
+          </data>
+        </addData>
+      </globalVars>
+    </data>
+    <data name="http://www.3s-software.com/plcopenxml/projectstructure" handleUnknown="discard">
+      <ProjectStructure>
+        <Folder Name="core">
+          <Object Name="LogLibCore" ObjectId="2a4dc63b-39c5-4266-8186-c395351ddc3f" />
+          <Object Name="LogBufferHandle" ObjectId="60038d0d-d46b-42dd-87a9-4e37a42bcef5" />
+          <Object Name="CreateBufferHandle" ObjectId="c46c1293-e550-4cb9-aa8b-63a7324413ae" />
+        <Folder Name="evt">
+          <Object Name="GetNextWritePointer" ObjectId="2a5eb56b-152a-4435-a006-d971138a18e0" />
+          <Object Name="EvtNull" ObjectId="7ad6c907-5e79-4b01-9b66-5967c0973536" />
+          <Object Name="EvtTick32" ObjectId="4a5f0180-67e1-48c3-b868-eb02dce2a205" />
+          <Object Name="EvtCh8Tick32Bool8" ObjectId="ead853a7-6a9e-487a-96ef-ee591ca53136" />
+          <Object Name="EvtCh8Tick32Int16" ObjectId="e779905b-2ad6-4331-9624-d18198859098" />
+          <Object Name="EvtCh8Tick32Int32" ObjectId="9864b1e0-377a-466c-a759-9a430429943f" />
+          <Object Name="EvtCh8Tick32UInt32" ObjectId="2daa6e7e-03db-4428-a646-2e2bf23bcdcb" />
+          <Object Name="EvtCh8Tick32Real32" ObjectId="4106ad30-1525-442e-a261-4af3082d9009" />
+          <Object Name="EvtCh8Tick32Real64" ObjectId="8d36a3dc-e63f-41aa-9d4c-22d0c0153c34" />
+          <Object Name="EvtCh16Tick32Bool8" ObjectId="568bda61-aa2c-4186-b672-37261dc86861" />
+          <Object Name="EvtCh16Tick32Int16" ObjectId="7879d925-a66f-408a-95a1-ffb4198b1629" />
+          <Object Name="EvtCh16Tick32Int32" ObjectId="4a5a384a-8ed7-40c0-bc9a-9005c823dfb4" />
+          <Object Name="EvtCh16Tick32UInt32" ObjectId="5a1f6c7d-852d-43a3-af12-3a9dfc54b73a" />
+          <Object Name="EvtCh16Tick32Real32" ObjectId="e8ba672d-4d4d-4347-be6b-ba4cda253e66" />
+          <Object Name="EvtCh16Tick32Real64" ObjectId="2c2f4674-f43c-438f-8186-a87d750c3d98" />
+          <Object Name="EvtGr8Id8Ch8Tick32Bool8" ObjectId="d33bbb1c-d4d6-4047-98f5-48136184c050" />
+          <Object Name="EvtGr8Id8Ch8Tick32Int16" ObjectId="42b97492-c592-4389-b5f6-a43cecd61280" />
+          <Object Name="EvtGr8Id8Ch8Tick32Int32" ObjectId="8835469c-140e-400d-85e8-8f899fc90693" />
+          <Object Name="EvtGr8Id8Ch8Tick32UInt32" ObjectId="560ad794-3c6e-47d3-9d30-8673c368cb3f" />
+          <Object Name="EvtGr8Id8Ch8Tick32Real32" ObjectId="ef328249-9f51-4772-933b-7161f0d2e8e1" />
+          <Object Name="EvtGr8Id8Ch8Tick32Real64" ObjectId="f5f1fef6-1744-44eb-af68-c78a1e2ca286" />
+          <Object Name="EvtGr8Id8Ch16Tick32Bool8" ObjectId="a84e65bc-d6ed-4613-9982-03f00cbaab30" />
+          <Object Name="EvtGr8Id8Ch16Tick32Int16" ObjectId="3259d9a3-487c-4c9c-b748-326ce7729bea" />
+          <Object Name="EvtGr8Id8Ch16Tick32Int32" ObjectId="307844f7-47fb-4048-a809-ad8a446677fe" />
+          <Object Name="EvtGr8Id8Ch16Tick32UInt32" ObjectId="4bb17630-2f8e-4549-9855-d479450c4bf1" />
+          <Object Name="EvtGr8Id8Ch16Tick32Real32" ObjectId="37f0edc8-5767-4599-9f2c-5a65187e410a" />
+          <Object Name="EvtGr8Id8Ch16Tick32Real64" ObjectId="29d17a1d-d663-409d-b0d0-fa7e7f9af6e0" />
+        </Folder>
+        </Folder>
+      </ProjectStructure>
+    </data>
+  </addData>
+</project>

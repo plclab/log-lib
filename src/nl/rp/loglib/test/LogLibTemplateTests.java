@@ -9,6 +9,7 @@ import freemarker.template.TemplateExceptionHandler;
 import nl.rp.loglib.impl.LogLibImpl;
 import nl.rp.loglib.impl.bachmann.mplc.BachmannMPlc;
 import nl.rp.loglib.impl.beckhoff.tc2.BeckhoffTc2;
+import nl.rp.loglib.impl.beckhoff.tc3.BeckhoffTc3;
 import nl.rp.loglib.impl.codesys.v2.CoDeSysV2;
 import nl.rp.loglib.impl.codesys.v3.CoDeSysV3;
 import nl.rp.loglib.impl.java.Java;
@@ -115,6 +116,9 @@ public class LogLibTemplateTests {
 		logLibImpl.generate(configuration);
 
 		logLibImpl = new BeckhoffTc2();
+		logLibImpl.generate(configuration);
+
+		logLibImpl = new BeckhoffTc3();
 		logLibImpl.generate(configuration);
 
 		logLibImpl = new BachmannMPlc();
