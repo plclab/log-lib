@@ -17,11 +17,10 @@ VAR
     p3: POINTER TO UDINT;
 END_VAR
 (* @END_DECLARATION := '0' *)
-i := GetNextWritePointer(8, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+i := GetNextWritePointer(12, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
 IF i >= 0 THEN
 
     p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
-
     p1^ := START_FLAG;
 
     p1 := p1 + 1;
@@ -38,5 +37,7 @@ IF i >= 0 THEN
 
     Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
 
+ELSE
+    EvtFull(Handle);
 END_IF
 END_FUNCTION

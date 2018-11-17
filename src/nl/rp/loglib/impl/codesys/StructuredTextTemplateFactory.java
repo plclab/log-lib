@@ -315,6 +315,10 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 				functionName += key.shortName;
 				break;
 
+			case FULL:
+				functionName += key.shortName;
+				break;
+
 			case GR8:
 				functionName += key.shortName;
 				inputVars.add(new Variable(key.fullName, getDataType(key.dataType)));
@@ -471,15 +475,27 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 
 		final List<String> instructions = new ArrayList<>();
 		bodyNode.put("instructions", instructions);
-		instructions.add("i := GetNextWritePointer(" + length + ", Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);");
-		instructions.add("IF i >= 0 THEN");
-		instructions.add("");
-		instructions.add(TAB + "p1 := Handle.BufferAddress + DINT_TO_DWORD(i);"); //TODO: DINT_TO_DWORD was added because of a warning under CoDeSys V3, check if this impacts runtime performance
-		instructions.add("");
-		instructions.addAll(evtInstructions);
-		instructions.add(TAB + "Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);");
-		instructions.add("");
-		instructions.add("END_IF");
+		if (evtConstant == Constant.EVT_FULL) {
+			instructions.add("i := GetNextWritePointer(" + length + ", Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);");
+			instructions.add("IF i >= 0 THEN");
+			instructions.add("");
+			instructions.add(TAB + "p1 := Handle.BufferAddress + DINT_TO_DWORD(i);"); //TODO: DINT_TO_DWORD was added because of a warning under CoDeSys V3, check if this impacts runtime performance
+			instructions.addAll(evtInstructions);
+			instructions.add(TAB + "Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);");
+			instructions.add("");
+			instructions.add("END_IF");
+		} else {
+			instructions.add("i := GetNextWritePointer(" + (length + 4) + ", Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);");
+			instructions.add("IF i >= 0 THEN");
+			instructions.add("");
+			instructions.add(TAB + "p1 := Handle.BufferAddress + DINT_TO_DWORD(i);"); //TODO: DINT_TO_DWORD was added because of a warning under CoDeSys V3, check if this impacts runtime performance
+			instructions.addAll(evtInstructions);
+			instructions.add(TAB + "Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);");
+			instructions.add("");
+			instructions.add("ELSE");
+			instructions.add(TAB + "EvtFull(Handle);");
+			instructions.add("END_IF");
+		}
 
 		return templateData;
 

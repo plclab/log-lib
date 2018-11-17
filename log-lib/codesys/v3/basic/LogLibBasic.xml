@@ -61,7 +61,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>1102d81a-fd70-4a11-a2af-13f02cbefb59</ObjectId>
+            <ObjectId>5728d662-061c-4865-8aad-cecb5b2f7e68</ObjectId>
           </data>
         </addData>
       </pou>
@@ -137,7 +137,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>5728d662-061c-4865-8aad-cecb5b2f7e68</ObjectId>
+            <ObjectId>78581c8a-2625-4915-920f-7f5a18e9efc4</ObjectId>
           </data>
         </addData>
       </pou>
@@ -201,7 +201,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>78581c8a-2625-4915-920f-7f5a18e9efc4</ObjectId>
+            <ObjectId>39da1ad7-b6ad-4ecb-afcd-ba104f6ee803</ObjectId>
           </data>
         </addData>
       </pou>
@@ -265,7 +265,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>39da1ad7-b6ad-4ecb-afcd-ba104f6ee803</ObjectId>
+            <ObjectId>3789d9b0-e3fe-4991-b2db-3905018bd317</ObjectId>
           </data>
         </addData>
       </pou>
@@ -329,7 +329,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>3789d9b0-e3fe-4991-b2db-3905018bd317</ObjectId>
+            <ObjectId>b06adbda-1c0e-495b-905f-9633b51c5869</ObjectId>
           </data>
         </addData>
       </pou>
@@ -393,7 +393,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>b06adbda-1c0e-495b-905f-9633b51c5869</ObjectId>
+            <ObjectId>f46f89d1-65e8-4abf-904e-c8b48a4f34a9</ObjectId>
           </data>
         </addData>
       </pou>
@@ -457,7 +457,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>f46f89d1-65e8-4abf-904e-c8b48a4f34a9</ObjectId>
+            <ObjectId>c9e2a74e-3591-4f4b-8df3-e161840ee150</ObjectId>
           </data>
         </addData>
       </pou>
@@ -521,7 +521,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>c9e2a74e-3591-4f4b-8df3-e161840ee150</ObjectId>
+            <ObjectId>39956dc6-efa5-4cd1-8894-e9fabdfdd67b</ObjectId>
           </data>
         </addData>
       </pou>
@@ -598,7 +598,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>39956dc6-efa5-4cd1-8894-e9fabdfdd67b</ObjectId>
+            <ObjectId>beee4186-30d7-457f-a459-f668d6d7699f</ObjectId>
           </data>
         </addData>
       </pou>
@@ -675,7 +675,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>beee4186-30d7-457f-a459-f668d6d7699f</ObjectId>
+            <ObjectId>4c3bcdaa-86c1-46aa-8da9-fd0e1738f1a2</ObjectId>
           </data>
         </addData>
       </pou>
@@ -752,7 +752,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>4c3bcdaa-86c1-46aa-8da9-fd0e1738f1a2</ObjectId>
+            <ObjectId>b5da77ee-fcf1-458d-b6f4-39780d9f42da</ObjectId>
           </data>
         </addData>
       </pou>
@@ -829,7 +829,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>b5da77ee-fcf1-458d-b6f4-39780d9f42da</ObjectId>
+            <ObjectId>5fea7633-9dad-43eb-ab8f-631328d36de0</ObjectId>
           </data>
         </addData>
       </pou>
@@ -906,7 +906,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>5fea7633-9dad-43eb-ab8f-631328d36de0</ObjectId>
+            <ObjectId>73f4efa3-796d-451c-ae20-def4489073d2</ObjectId>
           </data>
         </addData>
       </pou>
@@ -983,7 +983,7 @@ END_VAR
             </InterfaceAsPlainText>
           </data>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>73f4efa3-796d-451c-ae20-def4489073d2</ObjectId>
+            <ObjectId>bedd1006-6cd0-4c22-98a1-8c494365915a</ObjectId>
           </data>
         </addData>
       </pou>
@@ -1007,7 +1007,7 @@ END_VAR
         </variable>
         <addData>
           <data name="http://www.3s-software.com/plcopenxml/objectid" handleUnknown="discard">
-            <ObjectId>62bc94bb-abce-4b14-886c-4ac7ef16da62</ObjectId>
+            <ObjectId>1102d81a-fd70-4a11-a2af-13f02cbefb59</ObjectId>
           </data>
         </addData>
       </globalVars>
@@ -1015,24 +1015,24 @@ END_VAR
     <data name="http://www.3s-software.com/plcopenxml/projectstructure" handleUnknown="discard">
       <ProjectStructure>
         <Folder Name="basic">
-          <Object Name="LogLibBasic" ObjectId="62bc94bb-abce-4b14-886c-4ac7ef16da62" />
-          <Object Name="CreateGlobalBufferHandle" ObjectId="1102d81a-fd70-4a11-a2af-13f02cbefb59" />
-          <Object Name="LogBool" ObjectId="78581c8a-2625-4915-920f-7f5a18e9efc4" />
-          <Object Name="LogInt" ObjectId="39da1ad7-b6ad-4ecb-afcd-ba104f6ee803" />
-          <Object Name="LogDInt" ObjectId="3789d9b0-e3fe-4991-b2db-3905018bd317" />
-          <Object Name="LogUDInt" ObjectId="b06adbda-1c0e-495b-905f-9633b51c5869" />
-          <Object Name="LogReal" ObjectId="f46f89d1-65e8-4abf-904e-c8b48a4f34a9" />
-          <Object Name="LogLReal" ObjectId="c9e2a74e-3591-4f4b-8df3-e161840ee150" />
-          <Object Name="MonitorBool" ObjectId="39956dc6-efa5-4cd1-8894-e9fabdfdd67b" />
-          <Object Name="MonitorInt" ObjectId="beee4186-30d7-457f-a459-f668d6d7699f" />
-          <Object Name="MonitorDInt" ObjectId="4c3bcdaa-86c1-46aa-8da9-fd0e1738f1a2" />
-          <Object Name="MonitorUDInt" ObjectId="b5da77ee-fcf1-458d-b6f4-39780d9f42da" />
-          <Object Name="MonitorReal" ObjectId="5fea7633-9dad-43eb-ab8f-631328d36de0" />
-          <Object Name="MonitorLReal" ObjectId="73f4efa3-796d-451c-ae20-def4489073d2" />
+          <Object Name="LogLibBasic" ObjectId="1102d81a-fd70-4a11-a2af-13f02cbefb59" />
+          <Object Name="CreateGlobalBufferHandle" ObjectId="5728d662-061c-4865-8aad-cecb5b2f7e68" />
+          <Object Name="LogBool" ObjectId="39da1ad7-b6ad-4ecb-afcd-ba104f6ee803" />
+          <Object Name="LogInt" ObjectId="3789d9b0-e3fe-4991-b2db-3905018bd317" />
+          <Object Name="LogDInt" ObjectId="b06adbda-1c0e-495b-905f-9633b51c5869" />
+          <Object Name="LogUDInt" ObjectId="f46f89d1-65e8-4abf-904e-c8b48a4f34a9" />
+          <Object Name="LogReal" ObjectId="c9e2a74e-3591-4f4b-8df3-e161840ee150" />
+          <Object Name="LogLReal" ObjectId="39956dc6-efa5-4cd1-8894-e9fabdfdd67b" />
+          <Object Name="MonitorBool" ObjectId="beee4186-30d7-457f-a459-f668d6d7699f" />
+          <Object Name="MonitorInt" ObjectId="4c3bcdaa-86c1-46aa-8da9-fd0e1738f1a2" />
+          <Object Name="MonitorDInt" ObjectId="b5da77ee-fcf1-458d-b6f4-39780d9f42da" />
+          <Object Name="MonitorUDInt" ObjectId="5fea7633-9dad-43eb-ab8f-631328d36de0" />
+          <Object Name="MonitorReal" ObjectId="73f4efa3-796d-451c-ae20-def4489073d2" />
+          <Object Name="MonitorLReal" ObjectId="bedd1006-6cd0-4c22-98a1-8c494365915a" />
         </Folder>
         <Folder Name="core">
         <Folder Name="evt">
-          <Object Name="GetNextWritePointer" ObjectId="5728d662-061c-4865-8aad-cecb5b2f7e68" />
+          <Object Name="GetNextWritePointer" ObjectId="78581c8a-2625-4915-920f-7f5a18e9efc4" />
         </Folder>
         </Folder>
       </ProjectStructure>

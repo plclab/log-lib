@@ -22,11 +22,10 @@ VAR
     p4: POINTER TO REAL;
 END_VAR
 (* @END_DECLARATION := '0' *)
-i := GetNextWritePointer(16, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
+i := GetNextWritePointer(20, Handle.BufferWritePointer, Handle.BufferReadPointer, Handle.BufferSize, Handle.BufferOverflow);
 IF i >= 0 THEN
 
     p1 := Handle.BufferAddress + DINT_TO_DWORD(i);
-
     p1^ := START_FLAG;
 
     p1 := p1 + 1;
@@ -60,5 +59,7 @@ IF i >= 0 THEN
 
     Handle.BufferWritePointer := DWORD_TO_DINT(p1 - Handle.BufferAddress);
 
+ELSE
+    EvtFull(Handle);
 END_IF
 END_FUNCTION
