@@ -136,7 +136,6 @@ public class CoDeSysV3 extends LogLibImpl {
 			pous.add(templateFactory.getCreateGlobalBufferHandleFunctionTemplateData().getModel());
 
 			//Create log-lib-basic functions
-			pous.add(templateFactory.getGetNextWritePointerFunctionTemplateData().getModel());
 			pous.add(templateFactory.getLogBoolFunctionTemplateData().getModel());
 			pous.add(templateFactory.getLogIntFunctionTemplateData().getModel());
 			pous.add(templateFactory.getLogDIntFunctionTemplateData().getModel());
