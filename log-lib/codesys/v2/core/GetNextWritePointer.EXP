@@ -18,7 +18,7 @@ END_VAR
 (* @END_DECLARATION := '0' *)
 GetNextWritePointer := -1;
 IF WritePointer >= ReadPointer THEN
-    IF WritePointer + Length + 1 >= BufferSize THEN
+    IF WritePointer + Length >= BufferSize THEN
         IF ReadPointer >= Length THEN
             BufferOverflow := WritePointer;
             GetNextWritePointer := 0;

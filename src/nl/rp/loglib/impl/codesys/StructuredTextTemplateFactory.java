@@ -85,9 +85,9 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		final String name = "LogBufferHandle";
 
 		final List<Variable> vars = new ArrayList<>();
-		vars.add(new Variable("BufferAddress", "DWORD"));
+		vars.add(new Variable("BufferAddress", "POINTER TO BYTE", null, null, true)); //TODO: Use correct XML structure for pointers (derived works for now..)
 		vars.add(new Variable("BufferSize", "DINT"));
-		vars.add(new Variable("BufferEndAddress", "DWORD"));
+		vars.add(new Variable("BufferEndAddress", "POINTER TO BYTE", null, null, true)); //TODO: Use correct XML structure for pointers (derived works for now..)
 		vars.add(new Variable("BufferWritePointer", "DINT"));
 		vars.add(new Variable("BufferReadPointer", "DINT"));
 		vars.add(new Variable("BufferOverflow", "DINT"));
@@ -107,7 +107,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 	public TemplateData getCreateBufferHandleFunctionTemplateData() {
 
 		final List<Variable> inputVars = new ArrayList<>();	
-		inputVars.add(new Variable("BufferAddress", "DWORD"));
+		inputVars.add(new Variable("BufferAddress", "POINTER TO BYTE", null, null, true)); //TODO: Use correct XML structure for pointers (derived works for now..)
 		inputVars.add(new Variable("BufferSize", "DINT"));
 
 		final List<Variable> inOutVars = new ArrayList<>();	
@@ -115,8 +115,8 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 
 		final List<Variable> vars = new ArrayList<>();
 		vars.add(new Variable("byteOrderInt", "INT"));
-		vars.add(new Variable("byteOrderArray", "ARRAY[0..1] OF BYTE"));
-		vars.add(new Variable("pInt", "POINTER TO INT"));
+		vars.add(new Variable("byteOrderArray", "ARRAY[0..1] OF BYTE", null, null, true)); //TODO: Use correct XML structure for arrays (derived works for now..)
+		vars.add(new Variable("pInt", "POINTER TO INT", null, null, true)); //TODO: Use correct XML structure for pointers (derived works for now..)
 
 		final List<String> instructions = new ArrayList<>();
 		instructions.add("");
@@ -141,7 +141,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 	public TemplateData getCreateGlobalBufferHandleFunctionTemplateData() {
 
 		final List<Variable> inputVars = new ArrayList<>();	
-		inputVars.add(new Variable("BufferAddress", "DWORD"));
+		inputVars.add(new Variable("BufferAddress", "POINTER TO BYTE", null, null, true)); //TODO: Use correct XML structure for pointers (derived works for now..)
 		inputVars.add(new Variable("BufferSize", "DINT"));
 
 		final List<String> instructions = new ArrayList<>();
@@ -263,7 +263,7 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		final List<String> instructions = new ArrayList<>();
 		instructions.add("GetNextWritePointer := -1;");
 		instructions.add("IF WritePointer >= ReadPointer THEN");
-		instructions.add(TAB + "IF WritePointer + Length + 1 >= BufferSize THEN");
+		instructions.add(TAB + "IF WritePointer + Length >= BufferSize THEN");
 		instructions.add(TABTAB + "IF ReadPointer >= Length THEN");
 		instructions.add(TABTABTAB + "BufferOverflow := WritePointer;");
 		instructions.add(TABTABTAB + "GetNextWritePointer := 0;");
@@ -459,15 +459,15 @@ public class StructuredTextTemplateFactory extends TemplateFactory {
 		final List<Variable> vars = new ArrayList<>();
 		interfaceNode.put("vars", vars);
 		vars.add(new Variable("i", "DINT"));
-		vars.add(new Variable("p1", "POINTER TO BYTE"));
+		vars.add(new Variable("p1", "POINTER TO BYTE", null, null, true)); //TODO: Use correct XML structure for pointers (derived works for now..)
 		if (createP2Var) {
-			vars.add(new Variable("p2", "POINTER TO BYTE"));
+			vars.add(new Variable("p2", "POINTER TO BYTE", null, null, true)); //TODO: Use correct XML structure for pointers (derived works for now..)
 		}
 		if (p3DataType != null) {
-			vars.add(new Variable("p3", "POINTER TO " + getDataType(p3DataType)));
+			vars.add(new Variable("p3", "POINTER TO " + getDataType(p3DataType), null, null, true)); //TODO: Use correct XML structure for pointers (derived works for now..)
 		}
 		if (p4DataType != null) {
-			vars.add(new Variable("p4", "POINTER TO " + getDataType(p4DataType)));
+			vars.add(new Variable("p4", "POINTER TO " + getDataType(p4DataType), null, null, true)); //TODO: Use correct XML structure for pointers (derived works for now..)
 		}
 
 		final Map<String, Object> bodyNode = new HashMap<>();

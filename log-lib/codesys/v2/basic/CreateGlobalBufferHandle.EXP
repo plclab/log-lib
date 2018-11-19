@@ -5,7 +5,7 @@
 (* @SYMFILEFLAGS := '2048' *)
 FUNCTION CreateGlobalBufferHandle : BOOL
 VAR_INPUT
-    BufferAddress: DWORD;
+    BufferAddress: POINTER TO BYTE;
     BufferSize: DINT;
 END_VAR
 VAR

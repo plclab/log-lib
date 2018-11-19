@@ -3,9 +3,9 @@
 (* @OBJECTFLAGS := '0, 8' *)
 TYPE LogBufferHandle :
 STRUCT
-    BufferAddress: DWORD;
+    BufferAddress: POINTER TO BYTE;
     BufferSize: DINT;
-    BufferEndAddress: DWORD;
+    BufferEndAddress: POINTER TO BYTE;
     BufferWritePointer: DINT;
     BufferReadPointer: DINT;
     BufferOverflow: DINT;

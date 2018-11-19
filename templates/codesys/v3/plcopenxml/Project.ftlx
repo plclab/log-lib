@@ -32,7 +32,11 @@
             <#list dataType.vars as var>
             <variable name="${var.name}">
               <type>
+                <#if var.derived>
+                <derived name="${var.type}" />
+                <#else>
                 <${var.type} />
+                </#if>
               </type>
               <#if var.value??>
               <initialValue>
@@ -70,7 +74,7 @@
             <#list pou.interface.inputVars as inputVar>
             <variable name="${inputVar.name}">
               <type>
-                <#if inputVar.derived??>
+                <#if inputVar.derived>
                 <derived name="${inputVar.type}" />
                 <#else>
                 <${inputVar.type} />
@@ -90,7 +94,7 @@
             <#list pou.interface.inOutVars as inOutVar>
             <variable name="${inOutVar.name}">
               <type>
-                <#if inOutVar.derived??>
+                <#if inOutVar.derived>
                 <derived name="${inOutVar.type}" />
                 <#else>
                 <${inOutVar.type} />
@@ -110,7 +114,7 @@
             <#list pou.interface.vars as var>
             <variable name="${var.name}">
               <type>
-                <#if var.derived??>
+                <#if var.derived>
                 <derived name="${var.type}" />
                 <#else>
                 <${var.type} />
@@ -183,7 +187,7 @@ END_VAR
         <#list globalVarList.vars as var>
         <variable name="${var.name}">
           <type>
-            <#if var.derived??>
+            <#if var.derived>
             <derived name="${var.type}" />
             <#else>
             <${var.type} />

@@ -31,12 +31,12 @@
           <inputVars>
             <variable name="BufferAddress">
               <type>
-                <derived name="DWORD" />
+                <derived name="POINTER TO BYTE" />
               </type>
             </variable>
             <variable name="BufferSize">
               <type>
-                <derived name="DINT" />
+                <DINT />
               </type>
             </variable>
           </inputVars>
@@ -52,7 +52,7 @@
             <InterfaceAsPlainText>
               <xhtml xmlns="http://www.w3.org/1999/xhtml">FUNCTION CreateGlobalBufferHandle : BOOL
 VAR_INPUT
-    BufferAddress: DWORD;
+    BufferAddress: POINTER TO BYTE;
     BufferSize: DINT;
 END_VAR
 VAR
@@ -73,22 +73,22 @@ END_VAR
           <inputVars>
             <variable name="Group">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Id">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Channel">
               <type>
-                <derived name="UINT" />
+                <UINT />
               </type>
             </variable>
             <variable name="Value">
               <type>
-                <derived name="BOOL" />
+                <BOOL />
               </type>
             </variable>
           </inputVars>
@@ -137,22 +137,22 @@ END_VAR
           <inputVars>
             <variable name="Group">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Id">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Channel">
               <type>
-                <derived name="UINT" />
+                <UINT />
               </type>
             </variable>
             <variable name="Value">
               <type>
-                <derived name="INT" />
+                <INT />
               </type>
             </variable>
           </inputVars>
@@ -201,22 +201,22 @@ END_VAR
           <inputVars>
             <variable name="Group">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Id">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Channel">
               <type>
-                <derived name="UINT" />
+                <UINT />
               </type>
             </variable>
             <variable name="Value">
               <type>
-                <derived name="DINT" />
+                <DINT />
               </type>
             </variable>
           </inputVars>
@@ -265,22 +265,22 @@ END_VAR
           <inputVars>
             <variable name="Group">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Id">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Channel">
               <type>
-                <derived name="UINT" />
+                <UINT />
               </type>
             </variable>
             <variable name="Value">
               <type>
-                <derived name="UDINT" />
+                <UDINT />
               </type>
             </variable>
           </inputVars>
@@ -329,22 +329,22 @@ END_VAR
           <inputVars>
             <variable name="Group">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Id">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Channel">
               <type>
-                <derived name="UINT" />
+                <UINT />
               </type>
             </variable>
             <variable name="Value">
               <type>
-                <derived name="REAL" />
+                <REAL />
               </type>
             </variable>
           </inputVars>
@@ -393,22 +393,22 @@ END_VAR
           <inputVars>
             <variable name="Group">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Id">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Channel">
               <type>
-                <derived name="UINT" />
+                <UINT />
               </type>
             </variable>
             <variable name="Value">
               <type>
-                <derived name="LREAL" />
+                <LREAL />
               </type>
             </variable>
           </inputVars>
@@ -457,29 +457,29 @@ END_VAR
           <inputVars>
             <variable name="Group">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Id">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Channel">
               <type>
-                <derived name="UINT" />
+                <UINT />
               </type>
             </variable>
             <variable name="Value">
               <type>
-                <derived name="BOOL" />
+                <BOOL />
               </type>
             </variable>
           </inputVars>
           <inOutVars>
             <variable name="Data">
               <type>
-                <derived name="BOOL" />
+                <BOOL />
               </type>
             </variable>
           </inOutVars>
@@ -534,29 +534,29 @@ END_VAR
           <inputVars>
             <variable name="Group">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Id">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Channel">
               <type>
-                <derived name="UINT" />
+                <UINT />
               </type>
             </variable>
             <variable name="Value">
               <type>
-                <derived name="INT" />
+                <INT />
               </type>
             </variable>
           </inputVars>
           <inOutVars>
             <variable name="Data">
               <type>
-                <derived name="INT" />
+                <INT />
               </type>
             </variable>
           </inOutVars>
@@ -611,29 +611,29 @@ END_VAR
           <inputVars>
             <variable name="Group">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Id">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Channel">
               <type>
-                <derived name="UINT" />
+                <UINT />
               </type>
             </variable>
             <variable name="Value">
               <type>
-                <derived name="DINT" />
+                <DINT />
               </type>
             </variable>
           </inputVars>
           <inOutVars>
             <variable name="Data">
               <type>
-                <derived name="DINT" />
+                <DINT />
               </type>
             </variable>
           </inOutVars>
@@ -688,29 +688,29 @@ END_VAR
           <inputVars>
             <variable name="Group">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Id">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Channel">
               <type>
-                <derived name="UINT" />
+                <UINT />
               </type>
             </variable>
             <variable name="Value">
               <type>
-                <derived name="UDINT" />
+                <UDINT />
               </type>
             </variable>
           </inputVars>
           <inOutVars>
             <variable name="Data">
               <type>
-                <derived name="UDINT" />
+                <UDINT />
               </type>
             </variable>
           </inOutVars>
@@ -765,29 +765,29 @@ END_VAR
           <inputVars>
             <variable name="Group">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Id">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Channel">
               <type>
-                <derived name="UINT" />
+                <UINT />
               </type>
             </variable>
             <variable name="Value">
               <type>
-                <derived name="REAL" />
+                <REAL />
               </type>
             </variable>
           </inputVars>
           <inOutVars>
             <variable name="Data">
               <type>
-                <derived name="REAL" />
+                <REAL />
               </type>
             </variable>
           </inOutVars>
@@ -842,29 +842,29 @@ END_VAR
           <inputVars>
             <variable name="Group">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Id">
               <type>
-                <derived name="BYTE" />
+                <BYTE />
               </type>
             </variable>
             <variable name="Channel">
               <type>
-                <derived name="UINT" />
+                <UINT />
               </type>
             </variable>
             <variable name="Value">
               <type>
-                <derived name="LREAL" />
+                <LREAL />
               </type>
             </variable>
           </inputVars>
           <inOutVars>
             <variable name="Data">
               <type>
-                <derived name="LREAL" />
+                <LREAL />
               </type>
             </variable>
           </inOutVars>
@@ -926,7 +926,7 @@ END_VAR
         </variable>
         <variable name="GlobalTick">
           <type>
-            <derived name="UDINT" />
+            <UDINT />
           </type>
         </variable>
         <addData>
